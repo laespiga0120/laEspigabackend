@@ -55,7 +55,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cors = new CorsConfiguration();
-        cors.setAllowedOriginPatterns(List.of("http://localhost:8081", https://la-espigafrontend.vercel.app)); // tu frontend
+        cors.setAllowedOriginPatterns(List.of("http://localhost:8081", "https://la-espigafrontend.vercel.app")); // tu frontend
         cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         cors.setAllowedHeaders(List.of("*"));
         cors.setAllowCredentials(true);
