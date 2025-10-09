@@ -1,7 +1,6 @@
 package com.laespiga.laespigabackend.repository;
 
 import com.laespiga.laespigabackend.entity.Rol;
-import com.laespiga.laespigabackend.entity.Usuario;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;

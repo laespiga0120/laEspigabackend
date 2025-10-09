@@ -68,12 +68,12 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody Usuario usuario) {
         try {
-            // 1️⃣ Validar datos obligatorios
+            // Validar datos obligatorios
             if (usuario.getUsername() == null || usuario.getPassword() == null) {
                 return ResponseEntity.badRequest().body("Username y password son obligatorios");
             }
 
-            // 2️⃣ Validar rol
+            // Validar rol
             Rol rol;
             if (usuario.getRol() != null && usuario.getRol().getIdRol() != null) {
                 // Usar el idRol proporcionado en el JSON
@@ -85,16 +85,16 @@ public class AuthController {
                         .orElseThrow(() -> new RuntimeException("Rol USER no encontrado"));
             }
 
-            // 3️⃣ Encriptar la contraseña antes de guardar
+            // Encriptar la contraseña antes de guardar
             usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
 
-            // 4️⃣ Establecer relación bidireccional de manera segura
+            // Establecer relación bidireccional de manera segura
             usuario.setRol(rol);
             if (rol.getUsuarios() != null) {
                 rol.getUsuarios().add(usuario);
             }
 
-            // 5️⃣ Guardar usuario
+            // Guardar usuario
             usuarioRepository.save(usuario);
 
             return ResponseEntity.ok("Usuario registrado correctamente");
@@ -104,8 +104,6 @@ public class AuthController {
                     .body("Error al registrar usuario: " + e.getMessage());
         }
     }
-
-
 
 
 }
