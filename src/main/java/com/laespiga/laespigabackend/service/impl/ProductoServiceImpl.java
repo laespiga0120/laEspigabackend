@@ -1,8 +1,10 @@
 package com.laespiga.laespigabackend.service.impl;
 
+import com.laespiga.laespigabackend.entity.Lote;
 import com.laespiga.laespigabackend.entity.Producto;
 import com.laespiga.laespigabackend.entity.Ubicacion;
 import com.laespiga.laespigabackend.exception.ResourceNotFoundException;
+import com.laespiga.laespigabackend.repository.LoteRepository;
 import com.laespiga.laespigabackend.repository.ProductoRepository;
 import com.laespiga.laespigabackend.repository.UbicacionRepository;
 import com.laespiga.laespigabackend.service.ProductoService;
@@ -18,8 +20,13 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Autowired
     private ProductoRepository productoRepository;
+
     @Autowired
     private UbicacionRepository ubicacionRepository;
+
+    @Autowired
+    private LoteRepository loteRepository;
+
 
     @Override
     public List<Producto> listarTodos() {
@@ -37,30 +44,38 @@ public class ProductoServiceImpl implements ProductoService {
     }
 
     @Override
-    @Transactional // <-- Importante para asegurar que todo se guarde o nada
+    @Transactional
     public Producto guardar(Producto producto) {
-        // Verificamos si se asignó una ubicación
+        // Validaciones de ubicación (ya existentes)
         if (producto.getUbicacion() != null && producto.getUbicacion().getIdUbicacion() != null) {
-
-            // 1. Buscamos la ubicación en la base de datos
             Ubicacion ubicacion = ubicacionRepository.findById(producto.getUbicacion().getIdUbicacion())
                     .orElseThrow(() -> new ResourceNotFoundException("La ubicación seleccionada no existe."));
 
-            // 2. Verificamos si ya está ocupada
             if ("OCUPADA".equals(ubicacion.getEstado())) {
                 throw new IllegalStateException("La ubicación seleccionada ya se encuentra ocupada.");
             }
 
-            // 3. La marcamos como ocupada
             ubicacion.setEstado("OCUPADA");
-
-            // 4. JPA se encargará de guardar la ubicación actualizada al guardar el producto
             producto.setUbicacion(ubicacion);
         }
 
-        // 5. Guardamos el producto con su ubicación ya actualizada
-        return productoRepository.save(producto);
+        // Guardar producto
+        Producto productoGuardado = productoRepository.save(producto);
+
+        // 🔹 Crear lote inicial si hay stock
+        if (productoGuardado.getStock() != null && productoGuardado.getStock() > 0) {
+            Lote lote = new Lote();
+            lote.setProducto(productoGuardado);
+            lote.setCodigoLote("L" + productoGuardado.getIdProducto() + "-" + System.currentTimeMillis());
+            lote.setCantidad(productoGuardado.getStock());
+            lote.setFechaVencimiento(productoGuardado.getFechaVencimiento());
+            loteRepository.save(lote);
+        }
+
+        return productoGuardado;
     }
+
+
     @Override
     public Producto actualizar(Producto producto) {
         // Verifica si el producto existe
