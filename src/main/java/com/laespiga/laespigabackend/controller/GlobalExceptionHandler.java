@@ -1,5 +1,6 @@
 package com.laespiga.laespigabackend.controller;
 
+import com.laespiga.laespigabackend.exception.ResourceNotFoundException; // <-- ¡IMPORT AGREGADO!
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,6 +12,20 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    /**
+     * Maneja la excepción personalizada para recursos no encontrados.
+     * Captura ResourceNotFoundException y devuelve una respuesta 404 con un cuerpo JSON claro.
+     */
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<?> handleResourceNotFoundException(ResourceNotFoundException ex) {
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(Map.of(
+                        "message", "El recurso solicitado no fue encontrado.",
+                        "error", ex.getMessage()
+                ));
+    }
 
     /**
      * Maneja errores genéricos (por ejemplo, errores internos del servidor)
@@ -25,7 +40,6 @@ public class GlobalExceptionHandler {
                         "details", ex.getMessage()
                 ));
     }
-
 
     /**
      * Maneja errores de validación (DTO con @Valid)

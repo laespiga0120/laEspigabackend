@@ -1,13 +1,11 @@
 package com.laespiga.laespigabackend.entity;
 
 import jakarta.persistence.*;
-import org.antlr.v4.runtime.misc.NotNull;
-
+import com.fasterxml.jackson.annotation.JsonFormat;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 
 @Entity
-@Table(name= "Producto")
+@Table(name = "producto")
 public class Producto {
 
     @Id
@@ -24,12 +22,13 @@ public class Producto {
     @Column(name = "unidad_medida", nullable = false, length = 50)
     private String unidadMedida;
 
-    @Column(name = "stock", nullable = false )
+    @Column(name = "stock", nullable = false)
     private Integer stock;
 
     @Column(name = "stock_minimo", nullable = false)
     private Integer stockMinimo;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Column(name = "fecha_vencimiento")
     private LocalDateTime fechaVencimiento;
 
@@ -40,17 +39,23 @@ public class Producto {
     private String marca;
 
     @Column(name = "es_perecible")
-    private boolean perecible;
+    private Boolean perecible;
 
+    @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
     @Column(name = "fecha_registro", nullable = false)
-    private LocalDateTime fechaRegistro= LocalDateTime.now();
+    private LocalDateTime fechaRegistro;
+
+    @PrePersist
+    protected void onCreate() {
+        fechaRegistro = LocalDateTime.now();
+    }
 
     @ManyToOne
-    @JoinColumn(name = "id_categoria")
+    @JoinColumn(name = "id_categoria", nullable = false)
     private Categoria categoria;
 
-    @ManyToOne
-    @JoinColumn(name = "id_ubicacion")
+    @OneToOne
+    @JoinColumn(name = "id_ubicacion", unique = true)
     private Ubicacion ubicacion;
 
     public Producto() {

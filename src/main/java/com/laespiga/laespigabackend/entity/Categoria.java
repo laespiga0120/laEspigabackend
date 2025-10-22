@@ -2,6 +2,9 @@ package com.laespiga.laespigabackend.entity;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Entity
 @Table(name = "categoria")
 public class Categoria {
@@ -13,6 +16,12 @@ public class Categoria {
 
     @Column(name = "nombre_categoria", nullable = false, unique = true, length = 100)
     private String nombreCategoria;
+
+    @Column(name = "descripcion")
+    private String descripcion;
+
+    @OneToMany(mappedBy = "categoria", cascade = CascadeType.ALL)
+    private List<Producto> productos = new ArrayList<>();
 
     public Categoria() {}
 
@@ -34,5 +43,21 @@ public class Categoria {
 
     public void setNombreCategoria(String nombreCategoria) {
         this.nombreCategoria = nombreCategoria;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    public List<Producto> getProductos() {
+        return productos;
+    }
+
+    public void setProductos(List<Producto> productos) {
+        this.productos = productos;
     }
 }

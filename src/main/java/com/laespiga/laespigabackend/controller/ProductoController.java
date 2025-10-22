@@ -57,10 +57,18 @@ public class ProductoController {
             categoria.setIdCategoria(productoDTO.getIdCategoria());
             producto.setCategoria(categoria);
 
-            Ubicacion ubicacion = new Ubicacion();
-            ubicacion.setIdUbicacion(1);
-            producto.setUbicacion(ubicacion);
-
+            // ...
+// 🔹 Asignar la ubicación seleccionada desde el frontend
+            if (productoDTO.getIdUbicacion() != null) {
+                Ubicacion ubicacion = new Ubicacion();
+                // Usamos el ID que viene en el payload
+                ubicacion.setIdUbicacion(productoDTO.getIdUbicacion());
+                producto.setUbicacion(ubicacion);
+            } else {
+                // Si la ubicación es obligatoria, puedes lanzar un error aquí
+                return ResponseEntity.badRequest().body("Debe seleccionar una ubicación para el producto");
+            }
+// ...
             // 🔹 Guardar producto
             productoService.guardar(producto);
             return ResponseEntity.status(HttpStatus.CREATED)

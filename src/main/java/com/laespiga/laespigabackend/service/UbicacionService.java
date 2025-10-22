@@ -1,22 +1,31 @@
 package com.laespiga.laespigabackend.service;
 
-import com.laespiga.laespigabackend.entity.Ubicacion;
+import com.laespiga.laespigabackend.dto.AsignarUbicacionDto;
+import com.laespiga.laespigabackend.dto.RepisaCreateDto;
+import com.laespiga.laespigabackend.dto.RepisaDetalleDto;
+import com.laespiga.laespigabackend.dto.UbicacionDto;
+
 import java.util.List;
-import java.util.Optional;
 
 public interface UbicacionService {
 
-    List<Ubicacion> listarTodas();
+    void crearRepisaYGenerarUbicaciones(RepisaCreateDto repisaCreateDto);
 
-    Optional<Ubicacion> obtenerPorId(Integer id);
+    UbicacionDto asignarProductoAUbicacion(AsignarUbicacionDto asignarDto);
 
-    Optional<Ubicacion> obtenerPorNombre(String nombre);
+    // --- Métodos nuevos para el frontend ---
 
-    Ubicacion guardar(Ubicacion ubicacion);
+    /**
+     * Obtiene una lista de todas las repisas con sus detalles básicos y dimensiones.
+     * @return Lista de DTOs de repisas.
+     */
+    List<RepisaDetalleDto> obtenerTodasLasRepisasConDimensiones();
 
-    Ubicacion actualizar(Ubicacion ubicacion);
-
-    void eliminar(Integer id);
-
-    boolean existePorNombre(String nombre);
+    /**
+     * Obtiene todas las ubicaciones (con su estado) de una repisa específica.
+     * @param repisaId El ID de la repisa a consultar.
+     * @return Lista de DTOs de ubicaciones.
+     */
+    List<UbicacionDto> obtenerUbicacionesPorRepisa(Integer repisaId);
 }
+

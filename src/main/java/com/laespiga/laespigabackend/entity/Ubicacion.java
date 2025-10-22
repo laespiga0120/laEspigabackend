@@ -3,7 +3,12 @@ package com.laespiga.laespigabackend.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "ubicacion")
+@Table(
+        name = "ubicacion",
+        uniqueConstraints = {
+                @UniqueConstraint(columnNames = {"id_repisa", "fila", "columna"})
+        }
+)
 public class Ubicacion {
 
     @Id
@@ -11,14 +16,20 @@ public class Ubicacion {
     @Column(name = "id_ubicacion")
     private Integer idUbicacion;
 
-    @Column(name = "nombre_ubicacion", nullable = false, unique = true, length = 100)
-    private String nombreUbicacion;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_repisa", nullable = false)
+    private Repisa repisa;
+
+    @Column(name = "fila", nullable = false)
+    private Integer fila;
+
+    @Column(name = "columna", nullable = false)
+    private Integer columna;
+
+    @Column(name = "estado", length = 20)
+    private String estado;
 
     public Ubicacion() {}
-
-    public Ubicacion(String nombreUbicacion) {
-        this.nombreUbicacion = nombreUbicacion;
-    }
 
     public Integer getIdUbicacion() {
         return idUbicacion;
@@ -28,11 +39,35 @@ public class Ubicacion {
         this.idUbicacion = idUbicacion;
     }
 
-    public String getNombreUbicacion() {
-        return nombreUbicacion;
+    public Repisa getRepisa() {
+        return repisa;
     }
 
-    public void setNombreUbicacion(String nombreUbicacion) {
-        this.nombreUbicacion = nombreUbicacion;
+    public void setRepisa(Repisa repisa) {
+        this.repisa = repisa;
+    }
+
+    public Integer getFila() {
+        return fila;
+    }
+
+    public void setFila(Integer fila) {
+        this.fila = fila;
+    }
+
+    public Integer getColumna() {
+        return columna;
+    }
+
+    public void setColumna(Integer columna) {
+        this.columna = columna;
+    }
+
+    public String getEstado() {
+        return estado;
+    }
+
+    public void setEstado(String estado) {
+        this.estado = estado;
     }
 }
