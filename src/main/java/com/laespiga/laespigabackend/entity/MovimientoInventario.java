@@ -25,8 +25,17 @@ public class MovimientoInventario {
     @JoinColumn(name = "id_usuario", nullable = false)
     private Usuario usuario;
 
+    // --- NUEVA RELACIÓN AÑADIDA ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_proveedor") // Será null para movimientos de SALIDA
+    private Proveedor proveedor;
+    // ----------------------------
+
     @OneToMany(mappedBy = "movimientoInventario", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DetalleMovimiento> detalles;
+
+    @OneToMany(mappedBy = "movimientoInventario", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Lote> lotes;
 
     // Getters y Setters
     public Integer getIdMovimiento() { return idMovimiento; }
@@ -41,4 +50,11 @@ public class MovimientoInventario {
     public void setUsuario(Usuario usuario) { this.usuario = usuario; }
     public List<DetalleMovimiento> getDetalles() { return detalles; }
     public void setDetalles(List<DetalleMovimiento> detalles) { this.detalles = detalles; }
+    public List<Lote> getLotes() { return lotes; }
+    public void setLotes(List<Lote> lotes) { this.lotes = lotes; }
+
+    // --- GETTER Y SETTER PARA PROVEEDOR ---
+    public Proveedor getProveedor() { return proveedor; }
+    public void setProveedor(Proveedor proveedor) { this.proveedor = proveedor; }
+    // ------------------------------------
 }

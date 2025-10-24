@@ -50,13 +50,19 @@ public class Producto {
         fechaRegistro = LocalDateTime.now();
     }
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_categoria", nullable = false)
     private Categoria categoria;
 
     @OneToOne
     @JoinColumn(name = "id_ubicacion", unique = true)
     private Ubicacion ubicacion;
+
+    // --- NUEVA RELACIÓN AÑADIDA ---
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_proveedor")
+    private Proveedor proveedor;
+    // ----------------------------
 
     public Producto() {
     }
@@ -164,4 +170,14 @@ public class Producto {
     public void setUbicacion(Ubicacion ubicacion) {
         this.ubicacion = ubicacion;
     }
+
+    // --- GETTER Y SETTER PARA PROVEEDOR ---
+    public Proveedor getProveedor() {
+        return proveedor;
+    }
+
+    public void setProveedor(Proveedor proveedor) {
+        this.proveedor = proveedor;
+    }
+    // ------------------------------------
 }

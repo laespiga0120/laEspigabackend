@@ -1,21 +1,29 @@
 package com.laespiga.laespigabackend.service;
 
-import com.laespiga.laespigabackend.dto.MovimientoDto.*;
+import com.laespiga.laespigabackend.dto.*;
+
 import java.util.List;
 
 public interface MovimientoService {
-    /**
-     * Busca productos por nombre para el autocompletado.
-     */
+
+    // --- MÉTODOS DE BÚSQUEDA Y MOVIMIENTOS ---
+
     List<ProductoBusquedaDto> buscarProductosPorNombre(String nombre);
 
-    /**
-     * Registra una nueva salida de inventario.
-     */
     void registrarSalida(RegistroSalidaDto salidaDto, Integer idUsuario);
-
-    /**
-     * Obtiene el historial de salidas.
-     */
     List<MovimientoHistorialDto> obtenerHistorialDeSalidas();
+
+    List<ProductoPorProveedorDto> obtenerProductosPorProveedor(Integer idProveedor);
+    void registrarEntrada(RegistroEntradaDto entradaDto, Integer idUsuario);
+    List<MovimientoHistorialDto> obtenerHistorialDeEntradas();
+
+    // --- METODO DE REPORTE DE STOCK ---
+
+    List<ReporteDto> generarReporteStockActual(
+            Integer categoriaId,
+            String marca,
+            Boolean stockBajoMinimo,
+            String sortBy,
+            String sortDir
+    );
 }
