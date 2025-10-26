@@ -12,7 +12,7 @@ public class Lote {
     @Column(name = "id_lote")
     private Integer idLote;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // Usar LAZY es buena práctica
     @JoinColumn(name = "id_producto", nullable = false)
     private Producto producto;
 
@@ -27,6 +27,12 @@ public class Lote {
 
     @Column(name = "fecha_registro", nullable = false)
     private LocalDateTime fechaRegistro = LocalDateTime.now();
+
+    // CORRECCIÓN: Añadir relación opcional a MovimientoInventario si es relevante
+    // Si un lote se crea SOLO en una entrada, podríamos vincularlo
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_movimiento") // Nuevo campo FK opcional en la tabla 'lote'
+    private MovimientoInventario movimientoInventario;
 
     public Lote() {}
 
@@ -48,4 +54,7 @@ public class Lote {
 
     public LocalDateTime getFechaRegistro() { return fechaRegistro; }
     public void setFechaRegistro(LocalDateTime fechaRegistro) { this.fechaRegistro = fechaRegistro; }
+
+    public MovimientoInventario getMovimientoInventario() { return movimientoInventario; }
+    public void setMovimientoInventario(MovimientoInventario movimientoInventario) { this.movimientoInventario = movimientoInventario; }
 }

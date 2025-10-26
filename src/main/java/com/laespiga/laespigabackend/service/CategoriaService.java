@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * Interfaz del servicio para la gestión de Categorías.
- * Define las operaciones de negocio utilizando DTOs para la comunicación.
+ * Define las operaciones de negocio utilizando DTO para la comunicación.
  */
 public interface CategoriaService {
 

@@ -24,6 +24,9 @@ public class ProductoDTO {
     @NotNull(message = "Debe seleccionar la ubicacion")
     private Integer idUbicacion;
 
+    @NotNull(message = "Debe seleccionar un proveedor")
+    private Integer idProveedor;
+
     @Min(value = 0, message = "El stock no puede ser negativo")
     private Integer stock = 0;
 
@@ -146,5 +149,13 @@ public class ProductoDTO {
 
     public void setIdUbicacion(Integer idUbicacion) {
         this.idUbicacion = idUbicacion;
+    }
+
+    public Integer getIdProveedor() {
+        return idProveedor;
+    }
+
+    public void setIdProveedor( Integer idProveedor) {
+        this.idProveedor = idProveedor;
     }
 }

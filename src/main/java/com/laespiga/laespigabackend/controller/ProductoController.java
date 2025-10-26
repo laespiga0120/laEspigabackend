@@ -3,6 +3,7 @@ package com.laespiga.laespigabackend.controller;
 import com.laespiga.laespigabackend.dto.ProductoDTO;
 import com.laespiga.laespigabackend.entity.Categoria;
 import com.laespiga.laespigabackend.entity.Producto;
+import com.laespiga.laespigabackend.entity.Proveedor;
 import com.laespiga.laespigabackend.entity.Ubicacion;
 import com.laespiga.laespigabackend.service.ProductoService;
 import jakarta.validation.Valid;
@@ -56,6 +57,9 @@ public class ProductoController {
             Categoria categoria = new Categoria();
             categoria.setIdCategoria(productoDTO.getIdCategoria());
             producto.setCategoria(categoria);
+            Proveedor proveedor = new Proveedor();
+            proveedor.setIdProveedor(productoDTO.getIdProveedor());
+            producto.setProveedor(proveedor);
 
             // ...
 // 🔹 Asignar la ubicación seleccionada desde el frontend
