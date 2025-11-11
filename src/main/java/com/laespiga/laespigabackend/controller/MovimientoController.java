@@ -25,7 +25,10 @@ public class MovimientoController {
      * URL: GET /api/v1/movimientos/productos/buscar?nombre=...
      */
     @GetMapping("/productos/buscar")
-    public ResponseEntity<List<ProductoBusquedaDto>> buscarProductos(@RequestParam String nombre) {
+    public ResponseEntity<List<ProductoBusquedaDto>> buscarProductos(
+            // Permitir que el parámetro 'nombre' esté vacío para traer todos
+            @RequestParam(required = false, defaultValue = "") String nombre
+    ) {
         return ResponseEntity.ok(movimientoService.buscarProductosPorNombre(nombre));
     }
 

@@ -35,19 +35,28 @@ public class MovimientoServiceImpl implements MovimientoService {
     public List<ProductoBusquedaDto> buscarProductosPorNombre(String nombre) {
         List<Producto> productos;
 
-        if (nombre == null || nombre.isBlank()) {
-            // Si no hay texto, mostrar los primeros 5 productos
-            productos = productoRepository.findTop5ByOrderByNombreProductoAsc();
+        // 1. Si el nombre está vacío, buscar todos. Si no, filtrar.
+        if (nombre == null || nombre.trim().isEmpty()) {
+            productos = productoRepository.findAll();
         } else {
-            // Si hay texto, buscar coincidencias
             productos = productoRepository.findByNombreProductoContainingIgnoreCase(nombre);
         }
+
+        // 2. Mapear y calcular el stock REAL desde los lotes
         return productos.stream()
-                .map(p -> new ProductoBusquedaDto(
-                        p.getIdProducto(),
-                        p.getNombreProducto(),
-                        p.getDescripcionProducto(),
-                        p.getStock()))
+                .map(p -> {
+                    // Calcular el stock real sumando los lotes disponibles
+                    List<Lote> lotes = loteRepository.findLotesDisponiblesParaSalida(p.getIdProducto());
+                    int stockReal = lotes.stream().mapToInt(Lote::getCantidad).sum();
+
+                    // 3. Devolver el DTO con el stock real
+                    return new ProductoBusquedaDto(
+                            p.getIdProducto(),
+                            p.getNombreProducto(),
+                            p.getDescripcionProducto(),
+                            stockReal // <-- Se usa el stock real
+                    );
+                })
                 .collect(Collectors.toList());
     }
 
@@ -89,9 +98,6 @@ public class MovimientoServiceImpl implements MovimientoService {
                 cantidadARetirar -= cantidadDescontada;
                 loteRepository.save(lote);
             }
-
-            producto.setStock(producto.getStock() - detalleDto.getCantidad());
-            productoRepository.save(producto);
 
             DetalleMovimiento detalleMovimiento = new DetalleMovimiento();
             detalleMovimiento.setMovimientoInventario(movimientoGuardado);
@@ -176,19 +182,6 @@ public class MovimientoServiceImpl implements MovimientoService {
 
         movimientoGuardado.setDetalles(detallesAGuardar);
         movimientoGuardado.setLotes(lotesAGuardar);
-
-        // 3. Actualización de stock
-        entradaDto.getDetalles().stream()
-                .collect(Collectors.groupingBy(DetalleEntradaDto::getIdProducto,
-                        Collectors.summingInt(DetalleEntradaDto::getCantidad)))
-                .forEach((idProducto, cantidadTotalEntrante) -> {
-                    Producto productoAfectado = productoRepository.findById(idProducto)
-                            .orElseThrow(() -> new ResourceNotFoundException("Error interno: Producto no encontrado con ID: " + idProducto));
-
-                    int stockActual = productoAfectado.getStock() != null ? productoAfectado.getStock() : 0;
-                    productoAfectado.setStock(stockActual + cantidadTotalEntrante);
-                    productoRepository.save(productoAfectado);
-                });
     }
 
     @Override

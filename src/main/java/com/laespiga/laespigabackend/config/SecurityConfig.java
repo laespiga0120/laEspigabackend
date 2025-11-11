@@ -41,7 +41,7 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ Habilitar CORS aquí
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/api/v1/categorias/**","/api/v1/proveedores/**", "/api/v1/ubicaciones/**", "/api/productos/**", "/api/v1/movimientos/**").permitAll()
+                        .requestMatchers("/auth/**", "/api/v1/categorias/**","/api/v1/proveedores/**", "/api/v1/ubicaciones/**", "/api/productos/**", "/api/v1/movimientos/**", "/api/v1/movimientos/salidas/historial").permitAll()
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
