@@ -33,10 +33,24 @@ public class MovimientoServiceImpl implements MovimientoService {
 
     @Override
     public List<ProductoBusquedaDto> buscarProductosPorNombre(String nombre) {
-        return productoRepository.findByNombreProductoContainingIgnoreCase(nombre).stream()
-                .map(p -> new ProductoBusquedaDto(p.getIdProducto(), p.getNombreProducto(), p.getDescripcionProducto(), p.getStock()))
+        List<Producto> productos;
+
+        if (nombre == null || nombre.isBlank()) {
+            // Si no hay texto, mostrar los primeros 5 productos
+            productos = productoRepository.findTop5ByOrderByNombreProductoAsc();
+        } else {
+            // Si hay texto, buscar coincidencias
+            productos = productoRepository.findByNombreProductoContainingIgnoreCase(nombre);
+        }
+        return productos.stream()
+                .map(p -> new ProductoBusquedaDto(
+                        p.getIdProducto(),
+                        p.getNombreProducto(),
+                        p.getDescripcionProducto(),
+                        p.getStock()))
                 .collect(Collectors.toList());
     }
+
 
     @Override
     @Transactional
@@ -196,60 +210,53 @@ public class MovimientoServiceImpl implements MovimientoService {
             String sortBy,
             String sortDir
     ) {
-        // 1. Inicializar la especificación a null para encadenar sin warnings.
-        Specification<Producto> spec = null;
 
-        // 2. Aplicar filtros condicionales
+        // ✅ Usamos una lista de condiciones
+        List<Specification<Producto>> specs = new ArrayList<>();
+
         if (categoriaId != null) {
-            spec = Specification.where(spec).and(ProductoSpecification.hasCategoria(categoriaId));
-        }
-        if (marca != null && !marca.trim().isEmpty()) {
-            spec = Specification.where(spec).and(ProductoSpecification.hasMarca(marca));
-        }
-        if (Boolean.TRUE.equals(stockBajoMinimo)) {
-            spec = Specification.where(spec).and(ProductoSpecification.isStockBajoMinimo());
+            specs.add(ProductoSpecification.hasCategoria(categoriaId));
         }
 
-        // 3. Configurar la ordenación dinámica
+        if (marca != null && !marca.trim().isEmpty()) {
+            specs.add(ProductoSpecification.hasMarca(marca));
+        }
+
+        if (Boolean.TRUE.equals(stockBajoMinimo)) {
+            specs.add(ProductoSpecification.isStockBajoMinimo());
+        }
+
+        // ✅ Unimos las especificaciones dinámicamente
+        Specification<Producto> spec = specs.isEmpty()
+                ? null
+                : Specification.allOf(specs);
+
+        // Ordenamiento
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir.toUpperCase()), sortBy);
 
-        // 4. Ejecutar la consulta con filtro y ordenación
+        // Consulta con filtros dinámicos + sort
         List<Producto> productos = productoRepository.findAll(spec, sort);
 
-        // 5. Mapear los resultados al DTO (CON VERIFICACIÓN DE NULLS)
+        // Mapeo al DTO
         return productos.stream()
-                .map(p -> {
-                    // VERIFICACIÓN SEGURA DE CATEGORIA
-                    String nombreCategoria = p.getCategoria() != null ? p.getCategoria().getNombreCategoria() : "Sin Categoría";
-
-                    // VERIFICACIÓN SEGURA DE UBICACION y REPISA
-                    String ubicacionStr = "N/A";
-                    if (p.getUbicacion() != null) {
-                        Ubicacion ubicacion = p.getUbicacion();
-                        String codigoRepisa = "S/R";
-
-                        if (ubicacion.getRepisa() != null && ubicacion.getRepisa().getCodigo() != null) {
-                            codigoRepisa = ubicacion.getRepisa().getCodigo();
-                        }
-
-                        ubicacionStr = String.format("Repisa: %s, Fila: %d, Columna: %d",
-                                codigoRepisa,
-                                ubicacion.getFila(),
-                                ubicacion.getColumna());
-                    }
-
-                    return new ReporteDto(
-                            p.getIdProducto(),
-                            p.getNombreProducto(),
-                            nombreCategoria,
-                            p.getMarca(),
-                            ubicacionStr,
-                            p.getStock(),
-                            p.getStockMinimo()
-                    );
-                })
+                .map(p -> new ReporteDto(
+                        p.getIdProducto(),
+                        p.getNombreProducto(),
+                        p.getCategoria() != null ? p.getCategoria().getNombreCategoria() : "Sin Categoría",
+                        p.getMarca(),
+                        p.getUbicacion() != null ?
+                                String.format("Repisa: %s, Fila: %d, Columna: %d",
+                                        p.getUbicacion().getRepisa() != null ?
+                                                p.getUbicacion().getRepisa().getCodigo() : "S/R",
+                                        p.getUbicacion().getFila(),
+                                        p.getUbicacion().getColumna()) :
+                                "N/A",
+                        p.getStock(),
+                        p.getStockMinimo()
+                ))
                 .collect(Collectors.toList());
     }
+
 
     // -------------------------------------------------------------------------
     // --- METODO AUXILIAR PARA DTO DE HISTORIAL ---

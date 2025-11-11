@@ -14,6 +14,6 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer>, Jp
     Optional<Producto> findByNombreProducto(String nombreProducto);
     List<Producto> findByNombreProductoContainingIgnoreCase(String nombre);
     boolean existsByNombreProducto(String nombreProducto);
-
+    List<Producto> findTop5ByOrderByNombreProductoAsc();
     List<Producto> findByProveedorIdProveedor(Integer idProveedor);
 }
