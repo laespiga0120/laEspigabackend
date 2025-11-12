@@ -103,6 +103,7 @@ public class MovimientoServiceImpl implements MovimientoService {
             detalleMovimiento.setMovimientoInventario(movimientoGuardado);
             detalleMovimiento.setProducto(producto);
             detalleMovimiento.setCantidad(detalleDto.getCantidad());
+            detalleMovimiento.setPrecioUnitario(producto.getPrecio() != null ? producto.getPrecio() : 0.0);
             detallesAGuardar.add(detalleMovimiento);
         }
         movimientoGuardado.setDetalles(detallesAGuardar);
@@ -182,6 +183,19 @@ public class MovimientoServiceImpl implements MovimientoService {
 
         movimientoGuardado.setDetalles(detallesAGuardar);
         movimientoGuardado.setLotes(lotesAGuardar);
+
+        // 3. Actualización de stock
+        entradaDto.getDetalles().stream()
+                .collect(Collectors.groupingBy(DetalleEntradaDto::getIdProducto,
+                        Collectors.summingInt(DetalleEntradaDto::getCantidad)))
+                .forEach((idProducto, cantidadTotalEntrante) -> {
+                    Producto productoAfectado = productoRepository.findById(idProducto)
+                            .orElseThrow(() -> new ResourceNotFoundException("Error interno: Producto no encontrado con ID: " + idProducto));
+
+                    int stockActual = productoAfectado.getStock() != null ? productoAfectado.getStock() : 0;
+                    productoAfectado.setStock(stockActual + cantidadTotalEntrante);
+                    productoRepository.save(productoAfectado);
+                });
     }
 
     @Override
@@ -203,56 +217,63 @@ public class MovimientoServiceImpl implements MovimientoService {
             String sortBy,
             String sortDir
     ) {
+        // 1. Inicializar la especificación base (no nula)
+        Specification<Producto> spec = Specification.where(null);
 
-        // ✅ Usamos una lista de condiciones
-        List<Specification<Producto>> specs = new ArrayList<>();
-
+        // 2. Aplicar filtros condicionales
         if (categoriaId != null) {
-            specs.add(ProductoSpecification.hasCategoria(categoriaId));
+            spec = spec.and(ProductoSpecification.hasCategoria(categoriaId));
         }
-
         if (marca != null && !marca.trim().isEmpty()) {
-            specs.add(ProductoSpecification.hasMarca(marca));
+            spec = spec.and(ProductoSpecification.hasMarca(marca));
         }
-
         if (Boolean.TRUE.equals(stockBajoMinimo)) {
-            specs.add(ProductoSpecification.isStockBajoMinimo());
+            spec = spec.and(ProductoSpecification.isStockBajoMinimo());
         }
 
-        // ✅ Unimos las especificaciones dinámicamente
-        Specification<Producto> spec = specs.isEmpty()
-                ? null
-                : Specification.allOf(specs);
-
-        // Ordenamiento
+        // 3. Configurar la ordenación dinámica
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir.toUpperCase()), sortBy);
 
-        // Consulta con filtros dinámicos + sort
+        // 4. Ejecutar la consulta con filtro y ordenación
         List<Producto> productos = productoRepository.findAll(spec, sort);
 
-        // Mapeo al DTO
+        // 5. Mapear los resultados al DTO (CON VERIFICACIÓN DE NULLS)
         return productos.stream()
-                .map(p -> new ReporteDto(
-                        p.getIdProducto(),
-                        p.getNombreProducto(),
-                        p.getCategoria() != null ? p.getCategoria().getNombreCategoria() : "Sin Categoría",
-                        p.getMarca(),
-                        p.getUbicacion() != null ?
-                                String.format("Repisa: %s, Fila: %d, Columna: %d",
-                                        p.getUbicacion().getRepisa() != null ?
-                                                p.getUbicacion().getRepisa().getCodigo() : "S/R",
-                                        p.getUbicacion().getFila(),
-                                        p.getUbicacion().getColumna()) :
-                                "N/A",
-                        p.getStock(),
-                        p.getStockMinimo()
-                ))
+                .map(p -> {
+                    // VERIFICACIÓN SEGURA DE CATEGORIA
+                    String nombreCategoria = p.getCategoria() != null ? p.getCategoria().getNombreCategoria() : "Sin Categoría";
+
+                    // VERIFICACIÓN SEGURA DE UBICACION y REPISA
+                    String ubicacionStr = "N/A";
+                    if (p.getUbicacion() != null) {
+                        Ubicacion ubicacion = p.getUbicacion();
+                        String codigoRepisa = "S/R";
+
+                        if (ubicacion.getRepisa() != null && ubicacion.getRepisa().getCodigo() != null) {
+                            codigoRepisa = ubicacion.getRepisa().getCodigo();
+                        }
+
+                        ubicacionStr = String.format("Repisa: %s, Fila: %d, Columna: %d",
+                                codigoRepisa,
+                                ubicacion.getFila(),
+                                ubicacion.getColumna());
+                    }
+
+                    return new ReporteDto(
+                            p.getIdProducto(),
+                            p.getNombreProducto(),
+                            nombreCategoria,
+                            p.getMarca(),
+                            ubicacionStr,
+                            p.getStock(),
+                            p.getStockMinimo()
+                    );
+                })
                 .collect(Collectors.toList());
     }
 
-
     // -------------------------------------------------------------------------
-    // --- METODO AUXILIAR PARA DTO DE HISTORIAL ---
+    // --- METODO AUXILIAR PARA DTO DE HISTORIAL (MODIFICADO) ---
     // -------------------------------------------------------------------------
 
     private MovimientoHistorialDto convertirAMovimientoHistorialDto(MovimientoInventario mov) {
@@ -270,11 +291,25 @@ public class MovimientoServiceImpl implements MovimientoService {
         Usuario usuario = mov.getUsuario();
         dto.setNombreUsuario(usuario.getNombre() + " " + usuario.getApellido());
 
+        // --- INICIO DE MODIFICACIÓN ---
+        // Ahora pasamos el precio unitario al DTO de detalle
         List<DetalleHistorialDto> detalles = mov.getDetalles().stream()
-                .map(d -> new DetalleHistorialDto(d.getProducto().getNombreProducto(), d.getCantidad()))
+                .map(d -> new DetalleHistorialDto(
+                        d.getProducto().getNombreProducto(),
+                        d.getCantidad(),
+                        d.getPrecioUnitario() // <-- Pasamos el precio
+                ))
                 .collect(Collectors.toList());
         dto.setDetalles(detalles);
 
+        // Calculamos y asignamos el total general
+        Double totalGeneral = detalles.stream()
+                .mapToDouble(DetalleHistorialDto::getSubtotal)
+                .sum();
+        dto.setTotalGeneral(totalGeneral);
+        // --- FIN DE MODIFICACIÓN ---
+
         return dto;
     }
+
 }

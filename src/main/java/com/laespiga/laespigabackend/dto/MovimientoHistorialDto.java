@@ -9,6 +9,8 @@ public class MovimientoHistorialDto {
     private LocalDateTime fechaMovimiento;
     private String nombreUsuario;
     private List<DetalleHistorialDto> detalles;
+    private Double totalGeneral; // <-- AÑADIDO
+
     // Getters y Setters
     public Integer getIdMovimiento() { return idMovimiento; }
     public void setIdMovimiento(Integer idMovimiento) { this.idMovimiento = idMovimiento; }
@@ -20,4 +22,8 @@ public class MovimientoHistorialDto {
     public void setNombreUsuario(String nombreUsuario) { this.nombreUsuario = nombreUsuario; }
     public List<DetalleHistorialDto> getDetalles() { return detalles; }
     public void setDetalles(List<DetalleHistorialDto> detalles) { this.detalles = detalles; }
+
+    // --- NUEVO GETTER Y SETTER ---
+    public Double getTotalGeneral() { return totalGeneral; }
+    public void setTotalGeneral(Double totalGeneral) { this.totalGeneral = totalGeneral; }
 }
