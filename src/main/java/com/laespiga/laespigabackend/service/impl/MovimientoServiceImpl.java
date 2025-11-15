@@ -184,18 +184,24 @@ public class MovimientoServiceImpl implements MovimientoService {
         movimientoGuardado.setDetalles(detallesAGuardar);
         movimientoGuardado.setLotes(lotesAGuardar);
 
-        // 3. Actualización de stock
-        entradaDto.getDetalles().stream()
-                .collect(Collectors.groupingBy(DetalleEntradaDto::getIdProducto,
-                        Collectors.summingInt(DetalleEntradaDto::getCantidad)))
-                .forEach((idProducto, cantidadTotalEntrante) -> {
-                    Producto productoAfectado = productoRepository.findById(idProducto)
-                            .orElseThrow(() -> new ResourceNotFoundException("Error interno: Producto no encontrado con ID: " + idProducto));
+        // 3. Actualización de stock y PRECIO
+        // Reemplazamos el stream() con un bucle 'for' para acceder a todos los datos del detalle
+        for (DetalleEntradaDto detalleDto : entradaDto.getDetalles()) {
+            Producto productoAfectado = productoRepository.findById(detalleDto.getIdProducto())
+                    .orElseThrow(() -> new ResourceNotFoundException("Error interno: Producto no encontrado con ID: " + detalleDto.getIdProducto()));
 
-                    int stockActual = productoAfectado.getStock() != null ? productoAfectado.getStock() : 0;
-                    productoAfectado.setStock(stockActual + cantidadTotalEntrante);
-                    productoRepository.save(productoAfectado);
-                });
+            // Actualizar Stock
+            int stockActual = productoAfectado.getStock() != null ? productoAfectado.getStock() : 0;
+            productoAfectado.setStock(stockActual + detalleDto.getCantidad());
+
+            // ¡NUEVO! Actualizar Precio
+            // Asigna el precio del último lote ingresado como el precio principal del producto.
+            if (detalleDto.getPrecioUnitario() != null && detalleDto.getPrecioUnitario() > 0) {
+                productoAfectado.setPrecio(detalleDto.getPrecioUnitario());
+            }
+
+            productoRepository.save(productoAfectado);
+        }
     }
 
     @Override

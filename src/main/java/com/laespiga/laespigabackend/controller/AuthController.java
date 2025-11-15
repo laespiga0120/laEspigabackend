@@ -53,14 +53,15 @@ public class AuthController {
             LoginResponse response = new LoginResponse(
                     "Inicio de sesión correcto",
                     usuario.getRol().getNombreRol(),
-                    token
+                    token,
+                    usuario.getIdUsuario() // <-- AÑADIDO
             );
 
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
             return ResponseEntity.status(401).body(
-                    new LoginResponse("Credenciales inválidas", null, null)
+                    new LoginResponse("Credenciales inválidas", null, null, null)
             );
         }
     }

@@ -1,18 +1,26 @@
 package com.laespiga.laespigabackend.controller;
 
+import com.laespiga.laespigabackend.dto.FiltrosDto;
 import com.laespiga.laespigabackend.dto.ProductoDTO;
+import com.laespiga.laespigabackend.dto.ProductoDetalleDto;
+import com.laespiga.laespigabackend.dto.ProductoInventarioDto;
 import com.laespiga.laespigabackend.entity.Categoria;
+import com.laespiga.laespigabackend.dto.ProductoUpdateDto; // <-- AÑADIDO
 import com.laespiga.laespigabackend.entity.Producto;
 import com.laespiga.laespigabackend.entity.Proveedor;
 import com.laespiga.laespigabackend.entity.Ubicacion;
+import com.laespiga.laespigabackend.exception.ResourceNotFoundException;
 import com.laespiga.laespigabackend.service.ProductoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.AccessDeniedException; // <-- AÑADIDO
+import org.springframework.security.core.Authentication; // <-- AÑADIDO
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/productos")
@@ -81,6 +89,79 @@ public class ProductoController {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("No se pudo registrar el producto, intente nuevamente");
+        }
+    }
+
+    // --- NUEVOS ENDPOINTS PARA EL PANEL PRINCIPAL (Index.tsx) ---
+
+    /**
+     * Endpoint para obtener la lista filtrada y ordenada de productos para la tabla principal.
+     * GET /api/v1/productos/inventario?nombre=...&categoriaId=...&repisa=...&fila=...&columna=...&sortBy=...&sortDir=...
+     */
+    @GetMapping("/inventario")
+    public ResponseEntity<List<ProductoInventarioDto>> getInventario(
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Integer categoriaId,
+            @RequestParam(required = false) String repisa,
+            @RequestParam(required = false) Integer fila,
+            @RequestParam(required = false) Integer columna,
+            @RequestParam(defaultValue = "nombreProducto") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir
+    ) {
+        List<ProductoInventarioDto> productos = productoService.getInventario(
+                nombre, categoriaId, repisa, fila, columna, sortBy, sortDir
+        );
+        return ResponseEntity.ok(productos);
+    }
+
+    /**
+     * Endpoint para obtener los datos para poblar los filtros (categorías y repisas).
+     * GET /api/v1/productos/filtros
+     */
+    @GetMapping("/filtros")
+    public ResponseEntity<FiltrosDto> getFiltrosInventario() {
+        FiltrosDto filtros = productoService.getFiltrosInventario();
+        return ResponseEntity.ok(filtros);
+    }
+
+    /**
+     * Endpoint para obtener los detalles de un solo producto (para el modal).
+     * GET /api/v1/productos/detalles/{id}
+     */
+    @GetMapping("/detalles/{id}")
+    public ResponseEntity<ProductoDetalleDto> getProductoDetalle(@PathVariable Integer id) {
+        ProductoDetalleDto detalle = productoService.getProductoDetalle(id);
+        return ResponseEntity.ok(detalle);
+    }
+
+    /**
+     * Endpoint para actualizar parcialmente un producto (Nombre, Desc, Cat, Precio, StockMin).
+     * PUT /api/v1/productos/actualizar/{id}
+     */
+    @PutMapping("/actualizar/{id}")
+    public ResponseEntity<?> actualizarProducto(
+            @PathVariable Integer id,
+            @Valid @RequestBody ProductoUpdateDto dto,
+            Authentication authentication // Obtenemos el usuario autenticado
+    ) {
+        if (authentication == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Acceso denegado.");
+        }
+
+        try {
+            String username = authentication.getName();
+            ProductoDetalleDto productoActualizado = productoService.actualizarProductoParcial(id, dto, username);
+            return ResponseEntity.ok(productoActualizado);
+
+        } catch (ResourceNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (AccessDeniedException e) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
+        } catch (IllegalArgumentException e) {
+            // Para nombres duplicados
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al actualizar el producto: " + e.getMessage());
         }
     }
 }

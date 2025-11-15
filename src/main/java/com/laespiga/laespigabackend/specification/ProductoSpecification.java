@@ -2,6 +2,8 @@ package com.laespiga.laespigabackend.specification;
 
 import com.laespiga.laespigabackend.entity.Producto;
 import com.laespiga.laespigabackend.entity.Categoria;
+import com.laespiga.laespigabackend.entity.Repisa;
+import com.laespiga.laespigabackend.entity.Ubicacion;
 import jakarta.persistence.criteria.*;
 import org.springframework.data.jpa.domain.Specification;
 
@@ -34,5 +36,59 @@ public class ProductoSpecification {
     public static Specification<Producto> isStockBajoMinimo() {
         return (root, query, criteriaBuilder) ->
                 criteriaBuilder.lessThan(root.get("stock"), root.get("stockMinimo"));
+    }
+
+    // --- NUEVAS ESPECIFICACIONES PARA Index.tsx ---
+
+    /**
+     * Filtra por nombre del producto (ignorando mayúsculas/minúsculas).
+     */
+    public static Specification<Producto> hasNombre(String nombre) {
+        return (root, query, criteriaBuilder) -> {
+            if (nombre == null || nombre.trim().isEmpty()) {
+                return criteriaBuilder.conjunction(); // No aplicar filtro si está vacío
+            }
+            return criteriaBuilder.like(criteriaBuilder.lower(root.get("nombreProducto")), "%" + nombre.toLowerCase() + "%");
+        };
+    }
+
+    /**
+     * Filtra por código de Repisa (JOIN con Ubicacion y Repisa).
+     */
+    public static Specification<Producto> hasRepisa(String repisaCodigo) {
+        return (root, query, criteriaBuilder) -> {
+            if (repisaCodigo == null || repisaCodigo.trim().isEmpty()) {
+                return criteriaBuilder.conjunction();
+            }
+            Join<Producto, Ubicacion> ubicacionJoin = root.join("ubicacion", JoinType.INNER);
+            Join<Ubicacion, Repisa> repisaJoin = ubicacionJoin.join("repisa", JoinType.INNER);
+            return criteriaBuilder.equal(criteriaBuilder.lower(repisaJoin.get("codigo")), repisaCodigo.toLowerCase());
+        };
+    }
+
+    /**
+     * Filtra por número de Fila (JOIN con Ubicacion).
+     */
+    public static Specification<Producto> hasFila(Integer fila) {
+        return (root, query, criteriaBuilder) -> {
+            if (fila == null) {
+                return criteriaBuilder.conjunction();
+            }
+            Join<Producto, Ubicacion> ubicacionJoin = root.join("ubicacion", JoinType.INNER);
+            return criteriaBuilder.equal(ubicacionJoin.get("fila"), fila);
+        };
+    }
+
+    /**
+     * Filtra por número de Columna (JOIN con Ubicacion).
+     */
+    public static Specification<Producto> hasColumna(Integer columna) {
+        return (root, query, criteriaBuilder) -> {
+            if (columna == null) {
+                return criteriaBuilder.conjunction();
+            }
+            Join<Producto, Ubicacion> ubicacionJoin = root.join("ubicacion", JoinType.INNER);
+            return criteriaBuilder.equal(ubicacionJoin.get("columna"), columna);
+        };
     }
 }
