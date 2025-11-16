@@ -1,6 +1,7 @@
 package com.laespiga.laespigabackend.repository;
 
 import com.laespiga.laespigabackend.entity.Producto;
+import com.laespiga.laespigabackend.entity.Ubicacion;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor; // <-- NUEVA INTERFAZ
 import org.springframework.stereotype.Repository;
@@ -16,4 +17,6 @@ public interface ProductoRepository extends JpaRepository<Producto, Integer>, Jp
     boolean existsByNombreProducto(String nombreProducto);
     List<Producto> findTop5ByOrderByNombreProductoAsc();
     List<Producto> findByProveedorIdProveedor(Integer idProveedor);
+    // --- NUEVO MÉTODO ---
+    Optional<Producto> findByUbicacion(Ubicacion ubicacion);
 }

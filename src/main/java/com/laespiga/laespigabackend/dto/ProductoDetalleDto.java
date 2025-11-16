@@ -8,6 +8,7 @@ public class ProductoDetalleDto {
     private Integer idProducto; // <-- AÑADIDO
     private String nombre;
     private String categoria;
+    private Integer idCategoria;
     private String marca;
     private String descripcion;
     private Double precio;
@@ -18,6 +19,11 @@ public class ProductoDetalleDto {
     private String fechaVencimientoProxima; // La fecha más cercana
     private String proveedor; // <-- AÑADIDO
     private List<LoteDetalleDto> lotes;
+    // --- NUEVOS CAMPOS PARA UBICACIÓN DETALLADA ---
+    private Integer idUbicacion;
+    private Integer idRepisa;
+    private Integer fila;
+    private Integer columna;
 
     // Getters y Setters
 
@@ -127,4 +133,47 @@ public class ProductoDetalleDto {
     public void setLotes(List<LoteDetalleDto> lotes) {
         this.lotes = lotes;
     }
+
+    // Añadir getter y setter
+    public Integer getIdCategoria() {
+        return idCategoria;
+    }
+
+    public void setIdCategoria(Integer idCategoria) {
+        this.idCategoria = idCategoria;
+    }
+
+    // --- NUEVOS GETTERS Y SETTERS ---
+    public Integer getIdUbicacion() {
+        return idUbicacion;
+    }
+
+    public void setIdUbicacion(Integer idUbicacion) {
+        this.idUbicacion = idUbicacion;
+    }
+
+    public Integer getIdRepisa() {
+        return idRepisa;
+    }
+
+    public void setIdRepisa(Integer idRepisa) {
+        this.idRepisa = idRepisa;
+    }
+
+    public Integer getFila() {
+        return fila;
+    }
+
+    public void setFila(Integer fila) {
+        this.fila = fila;
+    }
+
+    public Integer getColumna() {
+        return columna;
+    }
+
+    public void setColumna(Integer columna) {
+        this.columna = columna;
+    }
+
 }

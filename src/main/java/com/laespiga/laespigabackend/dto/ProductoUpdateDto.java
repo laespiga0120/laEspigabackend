@@ -1,58 +1,59 @@
 package com.laespiga.laespigabackend.dto;
 
-import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 
 /**
- * DTO para la actualización parcial de un producto desde el Index.
- * Contiene solo los campos editables.
+ * DTO específico para actualizar un producto.
+ * Solo incluye los campos que se pueden modificar desde la tabla principal.
  */
 public class ProductoUpdateDto {
 
-    @NotBlank(message = "El nombre del producto no puede estar vacío.")
-    @Size(max = 100, message = "El nombre no debe superar los 100 caracteres.")
+    @NotBlank(message = "Debe ingresar un nombre para el producto")
+    @Size(max = 100, message = "El nombre del producto no debe superar los 100 caracteres")
     private String nombreProducto;
 
-    @Size(max = 500, message = "La descripción no debe superar los 500 caracteres.")
-    private String descripcion;
-
-    @NotNull(message = "Debe seleccionar una categoría.")
-    private Integer idCategoria;
-
-    @NotNull(message = "El precio es obligatorio.")
-    @Positive(message = "El precio debe ser mayor a cero.")
+    @NotNull(message = "El precio es obligatorio")
+    @Positive(message = "El precio debe ser mayor a cero")
     private Double precio;
 
-    @NotNull(message = "El stock mínimo es obligatorio.")
-    @Min(value = 0, message = "El stock mínimo no puede ser negativo.")
+    @NotNull(message = "Debe seleccionar una categoría")
+    private Integer idCategoria;
+
+    @NotNull(message = "El stock mínimo es obligatorio")
+    @Positive(message = "El stock mínimo debe ser mayor a cero")
     private Integer stockMinimo;
 
+    @Size(max = 500, message = "La descripción no debe superar los 500 caracteres")
+    private String descripcion;
+
+    // --- CAMPO AÑADIDO ---
+    @Size(max = 100, message = "La marca no debe superar los 100 caracteres.")
+    private String marca;
+    // --------------------
+
+    private Integer idRepisa;
+
+    @Positive(message = "La fila debe ser un número positivo")
+    private Integer fila;
+
+    @Positive(message = "La columna debe ser un número positivo")
+    private Integer columna;
+
+    // --- NUEVO CAMPO ---
+    private Boolean forzarCambioUbicacion; // Flag para desasignar ubicación del producto anterior
+
+
     // Getters y Setters
+
     public String getNombreProducto() {
         return nombreProducto;
     }
 
     public void setNombreProducto(String nombreProducto) {
         this.nombreProducto = nombreProducto;
-    }
-
-    public String getDescripcion() {
-        return descripcion;
-    }
-
-    public void setDescripcion(String descripcion) {
-        this.descripcion = descripcion;
-    }
-
-    public Integer getIdCategoria() {
-        return idCategoria;
-    }
-
-    public void setIdCategoria(Integer idCategoria) {
-        this.idCategoria = idCategoria;
     }
 
     public Double getPrecio() {
@@ -63,11 +64,69 @@ public class ProductoUpdateDto {
         this.precio = precio;
     }
 
+    public Integer getIdCategoria() {
+        return idCategoria;
+    }
+
+    public void setIdCategoria(Integer idCategoria) {
+        this.idCategoria = idCategoria;
+    }
+
     public Integer getStockMinimo() {
         return stockMinimo;
     }
 
     public void setStockMinimo(Integer stockMinimo) {
         this.stockMinimo = stockMinimo;
+    }
+
+    public String getDescripcion() {
+        return descripcion;
+    }
+
+    public void setDescripcion(String descripcion) {
+        this.descripcion = descripcion;
+    }
+
+    // --- GETTER Y SETTER AÑADIDOS ---
+    public String getMarca() {
+        return marca;
+    }
+
+    public void setMarca(String marca) {
+        this.marca = marca;
+    }
+
+    public Integer getIdRepisa() {
+        return idRepisa;
+    }
+
+    public void setIdRepisa(Integer idRepisa) {
+        this.idRepisa = idRepisa;
+    }
+
+    public Integer getFila() {
+        return fila;
+    }
+
+    public void setFila(Integer fila) {
+        this.fila = fila;
+    }
+
+    public Integer getColumna() {
+        return columna;
+    }
+
+    public void setColumna(Integer columna) {
+        this.columna = columna;
+    }
+
+    // --- NUEVO GETTER Y SETTER ---
+    public Boolean getForzarCambioUbicacion() {
+        return forzarCambioUbicacion;
+    }
+
+    public void setForzarCambioUbicacion(Boolean forzarCambioUbicacion) {
+        this.forzarCambioUbicacion = forzarCambioUbicacion;
     }
 }

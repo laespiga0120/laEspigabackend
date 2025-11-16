@@ -10,6 +10,7 @@ import com.laespiga.laespigabackend.entity.Producto;
 import com.laespiga.laespigabackend.entity.Proveedor;
 import com.laespiga.laespigabackend.entity.Ubicacion;
 import com.laespiga.laespigabackend.exception.ResourceNotFoundException;
+import com.laespiga.laespigabackend.exception.UbicacionOcupadaException;
 import com.laespiga.laespigabackend.service.ProductoService;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +21,9 @@ import org.springframework.security.access.AccessDeniedException; // <-- AÑADID
 import org.springframework.security.core.Authentication; // <-- AÑADIDO
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/productos")
@@ -142,7 +145,7 @@ public class ProductoController {
     public ResponseEntity<?> actualizarProducto(
             @PathVariable Integer id,
             @Valid @RequestBody ProductoUpdateDto dto,
-            Authentication authentication // Obtenemos el usuario autenticado
+            Authentication authentication
     ) {
         if (authentication == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Acceso denegado.");
@@ -158,10 +161,18 @@ public class ProductoController {
         } catch (AccessDeniedException e) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body(e.getMessage());
         } catch (IllegalArgumentException e) {
-            // Para nombres duplicados
             return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
+        } catch (UbicacionOcupadaException e) { // --- NUEVO CATCH ---
+            // Devolver JSON con información del producto que ocupa la ubicación
+            Map<String, Object> errorResponse = new HashMap<>();
+            errorResponse.put("error", "UBICACION_OCUPADA");
+            errorResponse.put("message", e.getMessage());
+            errorResponse.put("idProductoOcupante", e.getIdProductoOcupante());
+            errorResponse.put("nombreProductoOcupante", e.getNombreProductoOcupante());
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorResponse);
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error al actualizar el producto: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al actualizar el producto: " + e.getMessage());
         }
     }
 }

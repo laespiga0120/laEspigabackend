@@ -2,6 +2,7 @@ package com.laespiga.laespigabackend.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -41,7 +42,21 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ Habilitar CORS aquí
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/api/v1/categorias/**","/api/v1/proveedores/**", "/api/v1/ubicaciones/**", "/api/productos/**", "/api/v1/movimientos/**", "/api/v1/movimientos/salidas/historial").permitAll()
+                        // --- Endpoints Públicos (Auth, Vistas, Registros) ---
+                        .requestMatchers("/auth/**").permitAll()
+                        .requestMatchers("/api/v1/categorias/**").permitAll()
+                        .requestMatchers("/api/v1/proveedores/**").permitAll()
+                        .requestMatchers("/api/v1/ubicaciones/**").permitAll()
+                        .requestMatchers("/api/v1/movimientos/**").permitAll()
+
+                        // --- Desglose de /api/productos (CORRECCIÓN) ---
+                        // Permite registrar y ver productos públicamente
+                        .requestMatchers(HttpMethod.POST, "/api/productos/registrar").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/productos/inventario").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/productos/filtros").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/productos/detalles/**").permitAll()
+
+                        // --- Todo lo demás (incluyendo PUT /api/productos/actualizar) requiere autenticación ---
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

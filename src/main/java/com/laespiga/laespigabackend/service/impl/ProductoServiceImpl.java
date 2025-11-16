@@ -2,9 +2,10 @@ package com.laespiga.laespigabackend.service.impl;
 
 import com.laespiga.laespigabackend.dto.*;
 import com.laespiga.laespigabackend.entity.*; // <-- Import completo
-import com.laespiga.laespigabackend.exception.ResourceNotFoundException;
+import com.laespiga.laespigabackend.exception.*;
 import com.laespiga.laespigabackend.repository.CategoriaRepository; // <-- AÑADIDO
 import com.laespiga.laespigabackend.repository.LoteRepository;
+import com.laespiga.laespigabackend.repository.RepisaRepository;
 import com.laespiga.laespigabackend.repository.ProductoRepository;
 import com.laespiga.laespigabackend.repository.UbicacionRepository;
 import com.laespiga.laespigabackend.repository.UsuarioRepository; // <-- AÑADIDO
@@ -36,6 +37,9 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Autowired
     private LoteRepository loteRepository;
+
+    @Autowired
+    private RepisaRepository repisaRepository;
 
     @Autowired
     private CategoriaService categoriaService;
@@ -260,17 +264,28 @@ public class ProductoServiceImpl implements ProductoService {
 
         // 8. Construir DTO final
         ProductoDetalleDto detalleDto = new ProductoDetalleDto();
+        detalleDto.setIdProducto(p.getIdProducto()); // IMPORTANTE
         detalleDto.setNombre(p.getNombreProducto());
         detalleDto.setCategoria(p.getCategoria() != null ? p.getCategoria().getNombreCategoria() : "N/A");
+        detalleDto.setIdCategoria(p.getCategoria() != null ? p.getCategoria().getIdCategoria() : null); // AÑADIDO
         detalleDto.setMarca(p.getMarca());
         detalleDto.setDescripcion(p.getDescripcionProducto());
         detalleDto.setPrecio(p.getPrecio());
-        detalleDto.setStockDisponible(stockDisp); // Stock real de lotes
+        detalleDto.setStockDisponible(stockDisp);
         detalleDto.setStockMinimo(p.getStockMinimo());
         detalleDto.setUbicacion(ubicacionStr);
+
+        // --- NUEVOS CAMPOS DE UBICACIÓN DETALLADA ---
+        if (p.getUbicacion() != null) {
+            detalleDto.setIdUbicacion(p.getUbicacion().getIdUbicacion());
+            detalleDto.setIdRepisa(p.getUbicacion().getRepisa() != null ? p.getUbicacion().getRepisa().getIdRepisa() : null);
+            detalleDto.setFila(p.getUbicacion().getFila());
+            detalleDto.setColumna(p.getUbicacion().getColumna());
+        }
+
         detalleDto.setPerecible(Boolean.TRUE.equals(p.getPerecible()));
         detalleDto.setFechaVencimientoProxima(fechaProxima);
-        detalleDto.setProveedor(proveedorNombre); // <-- AÑADIDO
+        detalleDto.setProveedor(proveedorNombre);
         detalleDto.setLotes(lotesDto);
 
         return detalleDto;
@@ -283,7 +298,7 @@ public class ProductoServiceImpl implements ProductoService {
         List<CategoriaDto> categorias = categoriaService.obtenerTodasConConteo();
         List<RepisaDetalleDto> repisas = ubicacionService.obtenerTodasLasRepisasConDimensiones();
 
-        // Construye y devuelve el DTO de filtros
+        // Construye y  DTO de filtros
         return new FiltrosDto(categorias, repisas);
     }
 
@@ -292,17 +307,15 @@ public class ProductoServiceImpl implements ProductoService {
     @Transactional
     public ProductoDetalleDto actualizarProductoParcial(Integer idProducto, ProductoUpdateDto dto, String username) {
 
-        // 1. Verificación de permisos (según tu requisito ID '1')
+        // 1. Verificación de permisos
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
-        // Solo el usuario con ID 1 puede modificar (según tu solicitud)
         if (!usuario.getIdUsuario().equals(1)) {
-            // Nota: Podríamos también chequear el ROL: !usuario.getRol().getNombreRol().equals("ADMIN")
             throw new AccessDeniedException("Usuario no autorizado para esta operación.");
         }
 
-        // 2. Buscar Entidades
+        // 2. Buscar Producto
         Producto producto = productoRepository.findById(idProducto)
                 .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado con id: " + idProducto));
 
@@ -316,17 +329,78 @@ public class ProductoServiceImpl implements ProductoService {
             }
         }
 
-        // 4. Actualizar los campos permitidos
+        // 4. Actualizar campos básicos
         producto.setNombreProducto(dto.getNombreProducto());
         producto.setDescripcionProducto(dto.getDescripcion());
         producto.setPrecio(dto.getPrecio());
         producto.setStockMinimo(dto.getStockMinimo());
         producto.setCategoria(categoria);
 
-        // 5. Guardar
+        // Actualizar marca
+        if (dto.getMarca() != null) {
+            producto.setMarca(dto.getMarca());
+        }
+
+        // 5. ACTUALIZAR UBICACIÓN CON MANEJO DE UBICACIÓN OCUPADA
+        if (dto.getIdRepisa() != null && dto.getFila() != null && dto.getColumna() != null) {
+            Repisa repisa = repisaRepository.findById(dto.getIdRepisa())
+                    .orElseThrow(() -> new ResourceNotFoundException("Repisa no encontrada con id: " + dto.getIdRepisa()));
+
+            Ubicacion nuevaUbicacion = ubicacionRepository.findByRepisaAndFilaAndColumna(repisa, dto.getFila(), dto.getColumna())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            String.format("Ubicación no encontrada: Repisa %s, Fila %d, Columna %d",
+                                    repisa.getCodigo(), dto.getFila(), dto.getColumna())));
+
+            // Verificar si es diferente a la ubicación actual
+            boolean esDiferenteUbicacion = producto.getUbicacion() == null ||
+                    !producto.getUbicacion().getIdUbicacion().equals(nuevaUbicacion.getIdUbicacion());
+
+            if (esDiferenteUbicacion) {
+                // Verificar si la ubicación está ocupada
+                if ("OCUPADA".equals(nuevaUbicacion.getEstado())) {
+
+                    // Buscar el producto que ocupa la ubicación
+                    Optional<Producto> productoOcupante = productoRepository.findByUbicacion(nuevaUbicacion);
+
+                    // Si no se proporcionó el flag para forzar, lanzar excepción con información
+                    if (dto.getForzarCambioUbicacion() == null || !dto.getForzarCambioUbicacion()) {
+                        if (productoOcupante.isPresent()) {
+                            throw new UbicacionOcupadaException(
+                                    "La ubicación está ocupada por otro producto",
+                                    productoOcupante.get().getIdProducto(),
+                                    productoOcupante.get().getNombreProducto()
+                            );
+                        } else {
+                            throw new IllegalStateException("La ubicación seleccionada ya está ocupada por otro producto.");
+                        }
+                    }
+
+                    // Si se forzó el cambio, desasignar ubicación del producto anterior
+                    if (productoOcupante.isPresent()) {
+                        Producto prodAnterior = productoOcupante.get();
+                        prodAnterior.setUbicacion(null); // Quitar ubicación del producto anterior
+                        productoRepository.save(prodAnterior);
+                    }
+                }
+
+                // Liberar ubicación anterior del producto actual (si existe)
+                if (producto.getUbicacion() != null) {
+                    Ubicacion ubicacionAntigua = producto.getUbicacion();
+                    ubicacionAntigua.setEstado("LIBRE");
+                    ubicacionRepository.save(ubicacionAntigua);
+                }
+
+                // Ocupar nueva ubicación
+                nuevaUbicacion.setEstado("OCUPADA");
+                ubicacionRepository.save(nuevaUbicacion);
+                producto.setUbicacion(nuevaUbicacion);
+            }
+        }
+
+        // 6. Guardar
         productoRepository.save(producto);
 
-        // 6. Devolver los detalles actualizados (reutilizamos la lógica)
+        // 7. Devolver los detalles actualizados
         return this.getProductoDetalle(idProducto);
     }
 }
