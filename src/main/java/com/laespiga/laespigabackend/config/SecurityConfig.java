@@ -17,6 +17,7 @@ import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
+import java.util.Arrays;
 import java.util.List;
 
 @Configuration
@@ -40,45 +41,59 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .csrf(csrf -> csrf.disable())
-                .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ✅ Habilitar CORS aquí
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // --- Endpoints Públicos (Auth, Vistas, Registros) ---
+                        // 🔸 MUY IMPORTANTE: OPTIONS debe estar PRIMERO
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        // 🔸 Autenticación (sin token)
                         .requestMatchers("/auth/**").permitAll()
+
+                        // 🔸 Endpoints públicos de API
                         .requestMatchers("/api/v1/categorias/**").permitAll()
                         .requestMatchers("/api/v1/proveedores/**").permitAll()
                         .requestMatchers("/api/v1/ubicaciones/**").permitAll()
                         .requestMatchers("/api/v1/movimientos/**").permitAll()
 
-                        // --- Desglose de /api/productos (CORRECCIÓN) ---
-                        // Permite registrar y ver productos públicamente
+                        // 🔸 Productos - Endpoints públicos (GET y POST registro)
                         .requestMatchers(HttpMethod.POST, "/api/productos/registrar").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/productos/inventario").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/productos/filtros").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/productos/detalles/**").permitAll()
 
-                        // --- Todo lo demás (incluyendo PUT /api/productos/actualizar) requiere autenticación ---
+                        // 🔸 Productos - Actualizar (requiere autenticación)
+                        .requestMatchers(HttpMethod.PUT, "/api/productos/actualizar/**").authenticated()
+
+                        // 🔸 Todo lo demás requiere autenticación
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
+        // Agregar el filtro JWT
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // ✅ Configuración de CORS centralizada
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cors = new CorsConfiguration();
-        cors.setAllowedOriginPatterns(List.of("http://localhost:8081", "https://la-espigafrontend.vercel.app")); // tu frontend
-        cors.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        cors.setAllowedHeaders(List.of("*"));
+
+        // 🔸 Permitir tu frontend en desarrollo y producción
+        cors.setAllowedOriginPatterns(Arrays.asList(
+                "http://localhost:*",
+                "http://127.0.0.1:*",
+                "https://la-espigafrontend.vercel.app"
+        ));
+
+        cors.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        cors.setAllowedHeaders(Arrays.asList("*"));
         cors.setAllowCredentials(true);
-        cors.setExposedHeaders(List.of("Authorization")); // útil si tu frontend necesita leer el token
+        cors.setExposedHeaders(Arrays.asList("Authorization"));
+        cors.setMaxAge(3600L);
 
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", cors);
         return source;
     }
 }
-
