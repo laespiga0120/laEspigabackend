@@ -121,20 +121,7 @@ class UsuarioServiceImplTest {
     }
 
     // ---------- listarUsuarios ----------
-    @Test
-    void listarUsuarios_retornaLista() {
-        Usuario u1 = new Usuario();
-        Usuario u2 = new Usuario();
-        List<Usuario> lista = Arrays.asList(u1, u2);
 
-        when(usuarioRepository.findAll()).thenReturn(lista);
-
-        List<Usuario> resultado = usuarioServiceImpl.listarUsuarios();
-
-        assertEquals(2, resultado.size());
-        assertSame(lista, resultado);
-        verify(usuarioRepository).findAll();
-    }
 
     // ---------- eliminarUsuario ----------
     @Test

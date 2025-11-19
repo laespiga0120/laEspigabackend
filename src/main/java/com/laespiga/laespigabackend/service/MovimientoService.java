@@ -10,11 +10,11 @@ public interface MovimientoService {
 
     List<ProductoBusquedaDto> buscarProductosPorNombre(String nombre);
 
-    void registrarSalida(RegistroSalidaDto salidaDto, Integer idUsuario);
+    void registrarSalida(RegistroSalidaDto salidaDto, String username);
     List<MovimientoHistorialDto> obtenerHistorialDeSalidas();
 
     List<ProductoPorProveedorDto> obtenerProductosPorProveedor(Integer idProveedor);
-    void registrarEntrada(RegistroEntradaDto entradaDto, Integer idUsuario);
+    void registrarEntrada(RegistroEntradaDto entradaDto, String username);
     List<MovimientoHistorialDto> obtenerHistorialDeEntradas();
 
     // --- METODO DE REPORTE DE STOCK ---

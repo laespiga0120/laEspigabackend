@@ -63,13 +63,14 @@ public class MovimientoServiceImpl implements MovimientoService {
 
     @Override
     @Transactional
-    public void registrarSalida(RegistroSalidaDto salidaDto, Integer idUsuario) {
-        Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + idUsuario));
+    public void registrarSalida(RegistroSalidaDto salidaDto, String username) { // 🔹 CAMBIO
+        // Buscamos el usuario real por su username
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + username));
 
         MovimientoInventario movimiento = new MovimientoInventario();
         movimiento.setTipoMovimiento("SALIDA");
-        movimiento.setUsuario(usuario);
+        movimiento.setUsuario(usuario); // Asignamos el usuario autenticado
 
         String motivoFinal = "otro".equalsIgnoreCase(salidaDto.getMotivo()) ?
                 salidaDto.getObservacion() : salidaDto.getMotivo();
@@ -125,16 +126,17 @@ public class MovimientoServiceImpl implements MovimientoService {
 
     @Override
     @Transactional
-    public void registrarEntrada(RegistroEntradaDto entradaDto, Integer idUsuario) {
-        Usuario usuario = usuarioRepository.findById(idUsuario)
-                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado con ID: " + idUsuario));
+    public void registrarEntrada(RegistroEntradaDto entradaDto, String username) { // 🔹 CAMBIO
+        // Buscamos el usuario real por su username
+        Usuario usuario = usuarioRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado: " + username));
 
         Proveedor proveedor = proveedorRepository.findById(entradaDto.getIdProveedor())
                 .orElseThrow(() -> new ResourceNotFoundException("Proveedor no encontrado con ID: " + entradaDto.getIdProveedor()));
 
         MovimientoInventario movimiento = new MovimientoInventario();
         movimiento.setTipoMovimiento("ENTRADA");
-        movimiento.setUsuario(usuario);
+        movimiento.setUsuario(usuario); // Asignamos el usuario autenticado
         movimiento.setProveedor(proveedor);
         movimiento.setFechaMovimiento(entradaDto.getFechaEntrada() != null ? entradaDto.getFechaEntrada() : LocalDateTime.now());
 
@@ -185,7 +187,6 @@ public class MovimientoServiceImpl implements MovimientoService {
         movimientoGuardado.setLotes(lotesAGuardar);
 
         // 3. Actualización de stock y PRECIO
-        // Reemplazamos el stream() con un bucle 'for' para acceder a todos los datos del detalle
         for (DetalleEntradaDto detalleDto : entradaDto.getDetalles()) {
             Producto productoAfectado = productoRepository.findById(detalleDto.getIdProducto())
                     .orElseThrow(() -> new ResourceNotFoundException("Error interno: Producto no encontrado con ID: " + detalleDto.getIdProducto()));
@@ -194,8 +195,7 @@ public class MovimientoServiceImpl implements MovimientoService {
             int stockActual = productoAfectado.getStock() != null ? productoAfectado.getStock() : 0;
             productoAfectado.setStock(stockActual + detalleDto.getCantidad());
 
-            // ¡NUEVO! Actualizar Precio
-            // Asigna el precio del último lote ingresado como el precio principal del producto.
+            // Actualizar Precio si aplica
             if (detalleDto.getPrecioUnitario() != null && detalleDto.getPrecioUnitario() > 0) {
                 productoAfectado.setPrecio(detalleDto.getPrecioUnitario());
             }

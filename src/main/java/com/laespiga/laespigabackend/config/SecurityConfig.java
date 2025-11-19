@@ -18,7 +18,6 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
-import java.util.List;
 
 @Configuration
 @EnableMethodSecurity
@@ -43,25 +42,27 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
-                        // 🔸 MUY IMPORTANTE: OPTIONS debe estar PRIMERO
+                        // 🔸 OPTIONS PRIMERO
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // 🔸 Autenticación (sin token)
+                        // 🔸 Autenticación
                         .requestMatchers("/auth/**").permitAll()
 
-                        // 🔸 Endpoints públicos de API
+                        // 🔸 Endpoints públicos de API (Categorias, Proveedores, etc.)
                         .requestMatchers("/api/v1/categorias/**").permitAll()
                         .requestMatchers("/api/v1/proveedores/**").permitAll()
                         .requestMatchers("/api/v1/ubicaciones/**").permitAll()
                         .requestMatchers("/api/v1/movimientos/**").permitAll()
 
-                        // 🔸 Productos - Endpoints públicos (GET y POST registro)
+                        // 🔸 Usuarios y Roles (Protegidos, la lógica de rol está en el controlador)
+                        .requestMatchers("/api/v1/usuarios/**").authenticated()
+                        .requestMatchers("/api/v1/roles/**").authenticated()
+
+                        // 🔸 Productos
                         .requestMatchers(HttpMethod.POST, "/api/productos/registrar").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/productos/inventario").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/productos/filtros").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/productos/detalles/**").permitAll()
-
-                        // 🔸 Productos - Actualizar (requiere autenticación)
                         .requestMatchers(HttpMethod.PUT, "/api/productos/actualizar/**").authenticated()
 
                         // 🔸 Todo lo demás requiere autenticación
@@ -69,7 +70,6 @@ public class SecurityConfig {
                 )
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
 
-        // Agregar el filtro JWT
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
@@ -78,14 +78,11 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cors = new CorsConfiguration();
-
-        // 🔸 Permitir tu frontend en desarrollo y producción
         cors.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:*",
                 "http://127.0.0.1:*",
                 "https://la-espigafrontend.vercel.app"
         ));
-
         cors.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         cors.setAllowedHeaders(Arrays.asList("*"));
         cors.setAllowCredentials(true);

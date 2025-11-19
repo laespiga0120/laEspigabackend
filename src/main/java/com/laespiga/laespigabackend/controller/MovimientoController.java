@@ -6,6 +6,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication; // 🔹 Import necesario
+
 import java.util.List;
 import java.util.Map;
 
@@ -26,7 +28,6 @@ public class MovimientoController {
      */
     @GetMapping("/productos/buscar")
     public ResponseEntity<List<ProductoBusquedaDto>> buscarProductos(
-            // Permitir que el parámetro 'nombre' esté vacío para traer todos
             @RequestParam(required = false, defaultValue = "") String nombre
     ) {
         return ResponseEntity.ok(movimientoService.buscarProductosPorNombre(nombre));
@@ -37,10 +38,14 @@ public class MovimientoController {
      * URL: POST /api/v1/movimientos/salidas
      */
     @PostMapping("/salidas")
-    public ResponseEntity<?> registrarSalida(@RequestBody RegistroSalidaDto salidaDto) {
+    public ResponseEntity<?> registrarSalida(@RequestBody RegistroSalidaDto salidaDto, Authentication authentication) {
         try {
-            Integer idUsuarioAutenticado = 1; // ID de usuario fijo para el ejemplo
-            movimientoService.registrarSalida(salidaDto, idUsuarioAutenticado);
+            // 🔹 Obtenemos el username del contexto de seguridad
+            String username = authentication.getName();
+
+            // 🔹 Llamamos al servicio pasando el username
+            movimientoService.registrarSalida(salidaDto, username);
+
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Salida registrada exitosamente."));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
@@ -75,10 +80,14 @@ public class MovimientoController {
      * URL: POST /api/v1/movimientos/entradas
      */
     @PostMapping("/entradas")
-    public ResponseEntity<?> registrarEntrada(@RequestBody RegistroEntradaDto entradaDto) {
+    public ResponseEntity<?> registrarEntrada(@RequestBody RegistroEntradaDto entradaDto, Authentication authentication) {
         try {
-            Integer idUsuarioAutenticado = 1; // ID de usuario fijo para el ejemplo
-            movimientoService.registrarEntrada(entradaDto, idUsuarioAutenticado);
+            // 🔹 Obtenemos el username del contexto de seguridad
+            String username = authentication.getName();
+
+            // 🔹 Llamamos al servicio pasando el username
+            movimientoService.registrarEntrada(entradaDto, username);
+
             return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("message", "Entrada registrada exitosamente."));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
