@@ -33,6 +33,9 @@ public class Usuario {
     @Column(name = "estado", nullable = false)
     private Boolean estado = true;
 
+    @Column(name = "email", nullable = false,unique = true)
+    private String email;
+
     @ManyToOne
     @JoinColumn(name = "id_rol", nullable = false)
     private Rol rol;
@@ -61,4 +64,11 @@ public class Usuario {
     public Rol getRol() { return rol; }
     public void setRol(Rol rol) { this.rol = rol; }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 }

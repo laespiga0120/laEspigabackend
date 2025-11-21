@@ -64,6 +64,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setRol(rol);
         usuario.setFechaIngreso(LocalDateTime.now());
         usuario.setEstado(true);
+        usuario.setEmail(request.getEmail());
 
         Usuario guardado = usuarioRepository.save(usuario);
         return mapToDto(guardado);
@@ -84,6 +85,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setNombre(request.getNombre());
         usuario.setApellido(request.getApellido());
         usuario.setUsername(request.getUsername());
+        usuario.setEmail(request.getEmail());
 
         // Actualizar contraseña solo si viene en el request
         if (request.getPassword() != null && !request.getPassword().trim().isEmpty()) {
@@ -131,7 +133,8 @@ public class UsuarioServiceImpl implements UsuarioService {
                 u.getRol().getNombreRol(),
                 u.getRol().getIdRol(),
                 u.getFechaIngreso(),
-                u.getEstado()
+                u.getEstado(),
+                u.getEmail()
         );
     }
 }

@@ -8,11 +8,12 @@ public class UsuarioDto {
     private String nombre;
     private String apellido;
     private String nombreRol;
+    private String email;
     private Integer idRol;
     private LocalDateTime fechaIngreso;
     private Boolean estado;
 
-    public UsuarioDto(Integer idUsuario, String username, String nombre, String apellido, String nombreRol, Integer idRol, LocalDateTime fechaIngreso, Boolean estado) {
+    public UsuarioDto(Integer idUsuario, String username, String nombre, String apellido, String nombreRol, Integer idRol, LocalDateTime fechaIngreso, Boolean estado, String email) {
         this.idUsuario = idUsuario;
         this.username = username;
         this.nombre = nombre;
@@ -21,6 +22,7 @@ public class UsuarioDto {
         this.idRol = idRol;
         this.fechaIngreso = fechaIngreso;
         this.estado = estado;
+        this.email = email;
     }
 
     // Getters y Setters
@@ -40,4 +42,12 @@ public class UsuarioDto {
     public void setFechaIngreso(LocalDateTime fechaIngreso) { this.fechaIngreso = fechaIngreso; }
     public Boolean getEstado() { return estado; }
     public void setEstado(Boolean estado) { this.estado = estado; }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 }
