@@ -104,7 +104,7 @@ public class MovimientoServiceImpl implements MovimientoService {
             detalleMovimiento.setMovimientoInventario(movimientoGuardado);
             detalleMovimiento.setProducto(producto);
             detalleMovimiento.setCantidad(detalleDto.getCantidad());
-            detalleMovimiento.setPrecioUnitario(producto.getPrecio() != null ? producto.getPrecio() : 0.0);
+            detalleMovimiento.setPrecioUnitario(producto.getPrecio_compra() != null ? producto.getPrecio_compra() : 0.0);
             detallesAGuardar.add(detalleMovimiento);
         }
         movimientoGuardado.setDetalles(detallesAGuardar);
@@ -197,7 +197,7 @@ public class MovimientoServiceImpl implements MovimientoService {
 
             // Actualizar Precio si aplica
             if (detalleDto.getPrecioUnitario() != null && detalleDto.getPrecioUnitario() > 0) {
-                productoAfectado.setPrecio(detalleDto.getPrecioUnitario());
+                productoAfectado.setPrecio_compra(detalleDto.getPrecioUnitario());
             }
 
             productoRepository.save(productoAfectado);

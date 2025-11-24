@@ -32,8 +32,11 @@ public class Producto {
     @Column(name = "fecha_vencimiento")
     private LocalDateTime fechaVencimiento;
 
-    @Column(name = "precio", nullable = false)
-    private Double precio;
+    @Column(name = "precio_compra", nullable = false)
+    private Double precio_compra;
+
+    @Column(name = "precio_venta", nullable = false)
+    private Double precio_venta;
 
     @Column(name = "marca", length = 100)
     private String marca;
@@ -99,12 +102,12 @@ public class Producto {
         this.unidadMedida = unidadMedida;
     }
 
-    public Double getPrecio() {
-        return precio;
+    public Double getPrecio_compra() {
+        return precio_compra;
     }
 
-    public void setPrecio(Double precio) {
-        this.precio = precio;
+    public void setPrecio_compra(Double precio_compra) {
+        this.precio_compra = precio_compra;
     }
 
     public String getMarca() {
@@ -180,4 +183,12 @@ public class Producto {
         this.proveedor = proveedor;
     }
     // ------------------------------------
+
+    public Double getPrecio_venta() {
+        return precio_venta;
+    }
+
+    public void setPrecio_venta(Double precio_venta) {
+        this.precio_venta = precio_venta;
+    }
 }

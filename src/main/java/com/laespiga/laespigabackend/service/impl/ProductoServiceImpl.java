@@ -20,7 +20,6 @@ import org.springframework.security.access.AccessDeniedException; // <-- AÑADID
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Optional;
@@ -206,7 +205,7 @@ public class ProductoServiceImpl implements ProductoService {
                     p.getIdProducto(),
                     p.getNombreProducto(),
                     categoriaNombre,
-                    p.getPrecio(),
+                    p.getPrecio_compra(),
                     stockDisp, // ¡Stock real de lotes!
                     p.getStockMinimo(),
                     ubicacionStr,
@@ -270,7 +269,7 @@ public class ProductoServiceImpl implements ProductoService {
         detalleDto.setIdCategoria(p.getCategoria() != null ? p.getCategoria().getIdCategoria() : null); // AÑADIDO
         detalleDto.setMarca(p.getMarca());
         detalleDto.setDescripcion(p.getDescripcionProducto());
-        detalleDto.setPrecio(p.getPrecio());
+        detalleDto.setPrecio(p.getPrecio_compra());
         detalleDto.setStockDisponible(stockDisp);
         detalleDto.setStockMinimo(p.getStockMinimo());
         detalleDto.setUbicacion(ubicacionStr);
@@ -332,7 +331,7 @@ public class ProductoServiceImpl implements ProductoService {
         // 4. Actualizar campos básicos
         producto.setNombreProducto(dto.getNombreProducto());
         producto.setDescripcionProducto(dto.getDescripcion());
-        producto.setPrecio(dto.getPrecio());
+        producto.setPrecio_compra(dto.getPrecio());
         producto.setStockMinimo(dto.getStockMinimo());
         producto.setCategoria(categoria);
 

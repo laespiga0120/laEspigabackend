@@ -57,7 +57,7 @@ public class ProductoController {
             producto.setNombreProducto(productoDTO.getNombreProducto());
             producto.setDescripcionProducto(productoDTO.getDescripcion());
             producto.setUnidadMedida(productoDTO.getUnidadMedida());
-            producto.setPrecio(productoDTO.getPrecio());
+            producto.setPrecio_compra(productoDTO.getPrecio());
             producto.setStock(productoDTO.getStock() != null ? productoDTO.getStock() : 0);
             producto.setStockMinimo(productoDTO.getStockMinimo());
             producto.setPerecible(productoDTO.isPerecible());
