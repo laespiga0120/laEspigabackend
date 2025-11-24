@@ -25,8 +25,11 @@ public class DetalleMovimiento {
 
     // --- COLUMNAS PARA EL REGISTRO DE ENTRADA ---
 
-    @Column(name = "precio_unitario")
-    private Double precioUnitario;
+    @Column(name = "precio_compra")
+    private Double precioCompra;
+
+    @Column(name = "precio_venta")
+    private Double precioVenta;
 
     @Column(name = "fecha_vencimiento")
     private LocalDateTime fechaVencimiento; // <-- ¡Cambiado a LocalDateTime!
@@ -50,8 +53,12 @@ public class DetalleMovimiento {
     public Integer getCantidad() { return cantidad; }
     public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
 
-    public Double getPrecioUnitario() { return precioUnitario; }
-    public void setPrecioUnitario(Double precioUnitario) { this.precioUnitario = precioUnitario; }
+    public Double getPrecioCompra() { return precioCompra; }
+    public void setPrecioCompra(Double precioCompra) { this.precioCompra = precioCompra; }
+
+    public Double getPrecioVenta() { return precioVenta; }
+
+    public void setPrecioVenta(Double precioVenta) { this.precioVenta = precioVenta; }
 
     public LocalDateTime getFechaVencimiento() { return fechaVencimiento; } // <-- Tipo LocalDateTime
     public void setFechaVencimiento(LocalDateTime fechaVencimiento) { this.fechaVencimiento = fechaVencimiento; } // <-- Tipo LocalDateTime

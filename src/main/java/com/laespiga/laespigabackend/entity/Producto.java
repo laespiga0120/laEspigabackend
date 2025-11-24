@@ -33,10 +33,10 @@ public class Producto {
     private LocalDateTime fechaVencimiento;
 
     @Column(name = "precio_compra", nullable = false)
-    private Double precio_compra;
+    private Double precioCompra;
 
     @Column(name = "precio_venta", nullable = false)
-    private Double precio_venta;
+    private Double precioVenta;
 
     @Column(name = "marca", length = 100)
     private String marca;
@@ -102,12 +102,12 @@ public class Producto {
         this.unidadMedida = unidadMedida;
     }
 
-    public Double getPrecio_compra() {
-        return precio_compra;
+    public Double getPrecioCompra() {
+        return precioCompra;
     }
 
-    public void setPrecio_compra(Double precio_compra) {
-        this.precio_compra = precio_compra;
+    public void setPrecioCompra(Double precioCompra) {
+        this.precioCompra = precioCompra;
     }
 
     public String getMarca() {
@@ -184,11 +184,11 @@ public class Producto {
     }
     // ------------------------------------
 
-    public Double getPrecio_venta() {
-        return precio_venta;
+    public Double getPrecioVenta() {
+        return precioVenta;
     }
 
-    public void setPrecio_venta(Double precio_venta) {
-        this.precio_venta = precio_venta;
+    public void setPrecioVenta(Double precioVenta) {
+        this.precioVenta = precioVenta;
     }
 }

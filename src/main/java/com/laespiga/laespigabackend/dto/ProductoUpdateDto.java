@@ -15,9 +15,14 @@ public class ProductoUpdateDto {
     @Size(max = 100, message = "El nombre del producto no debe superar los 100 caracteres")
     private String nombreProducto;
 
-    @NotNull(message = "El precio es obligatorio")
-    @Positive(message = "El precio debe ser mayor a cero")
-    private Double precio;
+    @NotNull(message = "El precio de compra es obligatorio")
+    @Positive(message = "El precio de compra debe ser mayor a cero")
+    private Double precioCompra;
+
+    @NotNull(message = "El precio de venta es obligatorio")
+    @Positive(message = "El precio de venta debe ser mayor al precio de compra")
+    private Double precioVenta;
+
 
     @NotNull(message = "Debe seleccionar una categoría")
     private Integer idCategoria;
@@ -56,12 +61,20 @@ public class ProductoUpdateDto {
         this.nombreProducto = nombreProducto;
     }
 
-    public Double getPrecio() {
-        return precio;
+    public Double getPrecioCompra() {
+        return precioCompra;
     }
 
-    public void setPrecio(Double precio) {
-        this.precio = precio;
+    public void setPrecioCompra(Double precioCompra) {
+        this.precioCompra = precioCompra;
+    }
+
+    public Double getPrecioVenta() {
+        return precioVenta;
+    }
+
+    public void setPrecioVenta(Double precioVenta) {
+        this.precioVenta = precioVenta;
     }
 
     public Integer getIdCategoria() {

@@ -51,13 +51,18 @@ public class ProductoController {
                 return ResponseEntity.badRequest()
                         .body("Ya existe un producto con ese nombre");
             }
+            if(productoDTO.getPrecioCompra()>= productoDTO.getPrecioVenta()) {
+                return ResponseEntity.badRequest()
+                        .body("El precio de venta debe ser mayor al precio de compra");
+            }
 
             // Mapeo manual del DTO → Entidad
             Producto producto = new Producto();
             producto.setNombreProducto(productoDTO.getNombreProducto());
             producto.setDescripcionProducto(productoDTO.getDescripcion());
             producto.setUnidadMedida(productoDTO.getUnidadMedida());
-            producto.setPrecio_compra(productoDTO.getPrecio());
+            producto.setPrecioCompra(productoDTO.getPrecioCompra());
+            producto.setPrecioVenta(productoDTO.getPrecioVenta());
             producto.setStock(productoDTO.getStock() != null ? productoDTO.getStock() : 0);
             producto.setStockMinimo(productoDTO.getStockMinimo());
             producto.setPerecible(productoDTO.isPerecible());

@@ -6,7 +6,8 @@ public class ProductoInventarioDto {
     private Integer idProducto;
     private String nombre;
     private String categoria;
-    private Double precio;
+    private Double precioCompra;
+    private Double precioVenta;
     private Integer stockDisponible;
     private Integer stockMinimo;
     private String ubicacion; // Formato "A-1-2"
@@ -15,11 +16,12 @@ public class ProductoInventarioDto {
 
     public ProductoInventarioDto() {}
 
-    public ProductoInventarioDto(Integer idProducto, String nombre, String categoria, Double precio, Integer stockDisponible, Integer stockMinimo, String ubicacion, String proveedor) {
+    public ProductoInventarioDto(Integer idProducto, String nombre, String categoria, Double precioCompra, Double precioVenta, Integer stockDisponible, Integer stockMinimo, String ubicacion, String proveedor) {
         this.idProducto = idProducto;
         this.nombre = nombre;
         this.categoria = categoria;
-        this.precio = precio;
+        this.precioCompra = precioCompra;
+        this.precioVenta = precioVenta;
         this.stockDisponible = stockDisponible;
         this.stockMinimo = stockMinimo;
         this.ubicacion = ubicacion;
@@ -50,13 +52,17 @@ public class ProductoInventarioDto {
         this.categoria = categoria;
     }
 
-    public Double getPrecio() {
-        return precio;
+    public Double getPrecioCompra() {
+        return precioCompra;
     }
 
-    public void setPrecio(Double precio) {
-        this.precio = precio;
+    public void setPrecioCompra(Double precioCompra) {
+        this.precioCompra = precioCompra;
     }
+
+    public Double getPrecioVenta() {return precioVenta;}
+
+    public void setPrecioVenta(Double precioVenta) {this.precioVenta = precioVenta;}
 
     public Integer getStockDisponible() {
         return stockDisponible;

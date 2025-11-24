@@ -3,18 +3,20 @@ package com.laespiga.laespigabackend.dto;
 public class DetalleHistorialDto {
     private String nombreProducto;
     private Integer cantidad;
-    private Double precioUnitario; // <-- AÑADIDO
+    private Double precioVenta; // <-- AÑADIDO
+    private Double precioCompra;
     private Double subtotal;       // <-- AÑADIDO
 
     // Constructor actualizado para recibir el precio
-    public DetalleHistorialDto(String nombreProducto, Integer cantidad, Double precioUnitario) {
+    public DetalleHistorialDto(String nombreProducto, Integer cantidad, Double precioVenta, Double precioCompra) {
         this.nombreProducto = nombreProducto;
         this.cantidad = cantidad;
-        this.precioUnitario = (precioUnitario != null) ? precioUnitario : 0.0;
+        this.precioVenta = (precioVenta != null) ? precioVenta : 0.0;
+        this.precioCompra = (precioCompra != null) ? precioCompra : 0.0;
 
         // Calcular subtotal
-        if (cantidad != null && precioUnitario != null) {
-            this.subtotal = cantidad * precioUnitario;
+        if (cantidad != null && precioVenta != null) {
+            this.subtotal = cantidad * precioVenta;
         } else {
             this.subtotal = 0.0;
         }
@@ -27,8 +29,10 @@ public class DetalleHistorialDto {
     public void setCantidad(Integer cantidad) { this.cantidad = cantidad; }
 
     // --- NUEVOS GETTERS Y SETTERS ---
-    public Double getPrecioUnitario() { return precioUnitario; }
-    public void setPrecioUnitario(Double precioUnitario) { this.precioUnitario = precioUnitario; }
+    public Double getPrecioVenta() { return precioVenta; }
+    public void setPrecioVenta(Double precioVenta) { this.precioVenta = precioVenta; }
+    public Double getPrecioCompra() { return precioCompra; }
+    public void setPrecioCompra(Double precioCompra) { this.precioCompra = precioCompra; }
     public Double getSubtotal() { return subtotal; }
     public void setSubtotal(Double subtotal) { this.subtotal = subtotal; }
 }

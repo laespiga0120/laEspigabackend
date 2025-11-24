@@ -11,9 +11,13 @@ public class ProductoDTO {
     @Size(max = 100, message = "El nombre del producto no debe superar los 100 caracteres")
     private String nombreProducto;
 
-    @NotNull(message = "El precio es obligatorio")
+    @NotNull(message = "El precio de compra es obligatorio")
     @Positive(message = "El precio debe ser mayor a cero")
-    private Double precio;
+    private Double precioCompra;
+
+    @NotNull(message = "El precio de venta es obligatorio")
+    @Positive(message = "El precio debe venta debe ser mayor al precio de compra")
+    private Double precioVenta;
 
     @NotBlank(message = "Debe ingresar la unidad de medida")
     private String unidadMedida;
@@ -63,13 +67,16 @@ public class ProductoDTO {
         this.nombreProducto = nombreProducto;
     }
 
-    public Double getPrecio() {
-        return precio;
+    public Double getPrecioCompra() {
+        return precioCompra;
     }
 
-    public void setPrecio(Double precio) {
-        this.precio = precio;
+    public void setPrecioCompra(Double precioCompra) {
+        this.precioCompra = precioCompra;
     }
+
+    public Double getPrecioVenta() { return  precioVenta; }
+    public void setPrecioVenta(Double precioVenta) {this.precioVenta = precioVenta; }
 
     public String getUnidadMedida() {
         return unidadMedida;

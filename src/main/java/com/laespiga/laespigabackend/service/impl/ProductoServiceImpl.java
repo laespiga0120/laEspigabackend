@@ -205,7 +205,8 @@ public class ProductoServiceImpl implements ProductoService {
                     p.getIdProducto(),
                     p.getNombreProducto(),
                     categoriaNombre,
-                    p.getPrecio_compra(),
+                    p.getPrecioCompra(),
+                    p.getPrecioVenta(),
                     stockDisp, // ¡Stock real de lotes!
                     p.getStockMinimo(),
                     ubicacionStr,
@@ -269,7 +270,8 @@ public class ProductoServiceImpl implements ProductoService {
         detalleDto.setIdCategoria(p.getCategoria() != null ? p.getCategoria().getIdCategoria() : null); // AÑADIDO
         detalleDto.setMarca(p.getMarca());
         detalleDto.setDescripcion(p.getDescripcionProducto());
-        detalleDto.setPrecio(p.getPrecio_compra());
+        detalleDto.setPrecioCompra(p.getPrecioCompra());
+        detalleDto.setPrecioVenta(p.getPrecioVenta());
         detalleDto.setStockDisponible(stockDisp);
         detalleDto.setStockMinimo(p.getStockMinimo());
         detalleDto.setUbicacion(ubicacionStr);
@@ -331,7 +333,8 @@ public class ProductoServiceImpl implements ProductoService {
         // 4. Actualizar campos básicos
         producto.setNombreProducto(dto.getNombreProducto());
         producto.setDescripcionProducto(dto.getDescripcion());
-        producto.setPrecio_compra(dto.getPrecio());
+        producto.setPrecioCompra(dto.getPrecioCompra());
+        producto.setPrecioVenta(dto.getPrecioVenta());
         producto.setStockMinimo(dto.getStockMinimo());
         producto.setCategoria(categoria);
 

@@ -11,7 +11,8 @@ public class ProductoDetalleDto {
     private Integer idCategoria;
     private String marca;
     private String descripcion;
-    private Double precio;
+    private Double precioCompra;
+    private Double precioVenta;
     private Integer stockDisponible;
     private Integer stockMinimo;
     private String ubicacion;
@@ -68,13 +69,17 @@ public class ProductoDetalleDto {
         this.descripcion = descripcion;
     }
 
-    public Double getPrecio() {
-        return precio;
+    public Double getPrecioCompra() {
+        return precioCompra;
     }
 
-    public void setPrecio(Double precio) {
-        this.precio = precio;
+    public void setPrecioCompra(Double precioCompra) {
+        this.precioCompra = precioCompra;
     }
+
+    public Double getPrecioVenta() {return precioVenta;}
+
+    public void setPrecioVenta(Double precioVenta) {this.precioVenta = precioVenta;}
 
     public Integer getStockDisponible() {
         return stockDisponible;

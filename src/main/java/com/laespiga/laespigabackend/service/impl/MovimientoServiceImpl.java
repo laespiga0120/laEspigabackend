@@ -54,6 +54,7 @@ public class MovimientoServiceImpl implements MovimientoService {
                             p.getIdProducto(),
                             p.getNombreProducto(),
                             p.getDescripcionProducto(),
+                            p.getPrecioVenta(),
                             stockReal // <-- Se usa el stock real
                     );
                 })
@@ -104,7 +105,7 @@ public class MovimientoServiceImpl implements MovimientoService {
             detalleMovimiento.setMovimientoInventario(movimientoGuardado);
             detalleMovimiento.setProducto(producto);
             detalleMovimiento.setCantidad(detalleDto.getCantidad());
-            detalleMovimiento.setPrecioUnitario(producto.getPrecio_compra() != null ? producto.getPrecio_compra() : 0.0);
+            detalleMovimiento.setPrecioVenta(producto.getPrecioVenta() != null ? producto.getPrecioVenta() : 0.0);
             detallesAGuardar.add(detalleMovimiento);
         }
         movimientoGuardado.setDetalles(detallesAGuardar);
@@ -174,7 +175,8 @@ public class MovimientoServiceImpl implements MovimientoService {
             detalleMovimiento.setProducto(producto);
             detalleMovimiento.setCantidad(detalleDto.getCantidad());
 
-            detalleMovimiento.setPrecioUnitario(detalleDto.getPrecioUnitario() != null ? detalleDto.getPrecioUnitario() : 0.0);
+            detalleMovimiento.setPrecioCompra(detalleDto.getPrecioCompra() != null ? detalleDto.getPrecioCompra() : 0.0);
+            detalleMovimiento.setPrecioVenta(detalleDto.getPrecioVenta() != null ? detalleDto.getPrecioVenta() : 0.0);
             detalleMovimiento.setObservacionDetalle(detalleDto.getObservacionDetalle());
 
             detalleMovimiento.setIdLote(loteGuardado.getIdLote());
@@ -196,8 +198,8 @@ public class MovimientoServiceImpl implements MovimientoService {
             productoAfectado.setStock(stockActual + detalleDto.getCantidad());
 
             // Actualizar Precio si aplica
-            if (detalleDto.getPrecioUnitario() != null && detalleDto.getPrecioUnitario() > 0) {
-                productoAfectado.setPrecio_compra(detalleDto.getPrecioUnitario());
+            if (detalleDto.getPrecioCompra() != null && detalleDto.getPrecioCompra() > 0) {
+                productoAfectado.setPrecioCompra(detalleDto.getPrecioCompra());
             }
 
             productoRepository.save(productoAfectado);
@@ -303,7 +305,8 @@ public class MovimientoServiceImpl implements MovimientoService {
                 .map(d -> new DetalleHistorialDto(
                         d.getProducto().getNombreProducto(),
                         d.getCantidad(),
-                        d.getPrecioUnitario() // <-- Pasamos el precio
+                        d.getPrecioVenta(),
+                        d.getPrecioCompra()
                 ))
                 .collect(Collectors.toList());
         dto.setDetalles(detalles);
