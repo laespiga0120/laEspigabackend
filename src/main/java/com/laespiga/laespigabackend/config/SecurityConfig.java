@@ -82,7 +82,7 @@ public class SecurityConfig {
                 "http://localhost:*",
                 "http://127.0.0.1:*",
                 "https://la-espigafrontend.vercel.app",
-                "https://la-espigafrontend-sopp.vercel.app"
+                
         ));
         cors.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         cors.setAllowedHeaders(Arrays.asList("*"));
