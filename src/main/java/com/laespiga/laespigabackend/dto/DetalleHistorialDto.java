@@ -2,21 +2,30 @@ package com.laespiga.laespigabackend.dto;
 
 public class DetalleHistorialDto {
     private String nombreProducto;
+    private Integer idProducto; // <-- NUEVO CAMPO
     private Integer cantidad;
     private Double precioVenta; // <-- AÑADIDO
     private Double precioCompra;
     private Double subtotal;       // <-- AÑADIDO
 
     // Constructor actualizado para recibir el precio
-    public DetalleHistorialDto(String nombreProducto, Integer cantidad, Double precioVenta, Double precioCompra) {
+    public DetalleHistorialDto(Integer idProducto, String nombreProducto, Integer cantidad, Double precioVenta, Double precioCompra) {
+        this.idProducto = idProducto; // <-- ASIGNAR
         this.nombreProducto = nombreProducto;
         this.cantidad = cantidad;
         this.precioVenta = (precioVenta != null) ? precioVenta : 0.0;
         this.precioCompra = (precioCompra != null) ? precioCompra : 0.0;
 
-        // Calcular subtotal
-        if (cantidad != null && precioVenta != null) {
-            this.subtotal = cantidad * precioVenta;
+        // Calcular subtotal (Lógica mejorada para soportar Entradas y Salidas)
+        double precioCalculo = 0.0;
+        if (precioVenta != null && precioVenta > 0) {
+            precioCalculo = precioVenta;
+        } else if (precioCompra != null) {
+            precioCalculo = precioCompra;
+        }
+
+        if (cantidad != null) {
+            this.subtotal = cantidad * precioCalculo;
         } else {
             this.subtotal = 0.0;
         }
@@ -35,4 +44,9 @@ public class DetalleHistorialDto {
     public void setPrecioCompra(Double precioCompra) { this.precioCompra = precioCompra; }
     public Double getSubtotal() { return subtotal; }
     public void setSubtotal(Double subtotal) { this.subtotal = subtotal; }
+
+    // Getters y Setters
+    public Integer getIdProducto() { return idProducto; }
+    public void setIdProducto(Integer idProducto) { this.idProducto = idProducto; }
+
 }

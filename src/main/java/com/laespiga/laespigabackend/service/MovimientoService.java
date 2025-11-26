@@ -2,6 +2,7 @@ package com.laespiga.laespigabackend.service;
 
 import com.laespiga.laespigabackend.dto.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface MovimientoService {
@@ -26,4 +27,8 @@ public interface MovimientoService {
             String sortBy,
             String sortDir
     );
+    // --- NUEVOS MÉTODOS ---
+    List<MovimientoHistorialDto> listarMovimientos(LocalDate fechaInicio, LocalDate fechaFin, String tipo);
+    void eliminarMovimiento(Integer idMovimiento);
+    void actualizarMovimiento(Integer idMovimiento, MovimientoUpdateDto updateDto);
 }

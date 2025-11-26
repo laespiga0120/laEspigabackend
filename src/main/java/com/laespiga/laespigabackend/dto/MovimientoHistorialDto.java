@@ -5,6 +5,8 @@ import java.util.List;
 
 public class MovimientoHistorialDto {
     private Integer idMovimiento;
+    private Integer idUsuario;
+    private String tipoMovimiento;
     private String motivo;
     private LocalDateTime fechaMovimiento;
     private String nombreUsuario;
@@ -22,8 +24,12 @@ public class MovimientoHistorialDto {
     public void setNombreUsuario(String nombreUsuario) { this.nombreUsuario = nombreUsuario; }
     public List<DetalleHistorialDto> getDetalles() { return detalles; }
     public void setDetalles(List<DetalleHistorialDto> detalles) { this.detalles = detalles; }
-
+    public String getTipoMovimiento() {return tipoMovimiento;}
+    public void setTipoMovimiento(String tipoMovimiento) { this.tipoMovimiento = tipoMovimiento; }
     // --- NUEVO GETTER Y SETTER ---
     public Double getTotalGeneral() { return totalGeneral; }
     public void setTotalGeneral(Double totalGeneral) { this.totalGeneral = totalGeneral; }
+
+    public Integer getIdUsuario() { return idUsuario; }
+    public void setIdUsuario(Integer idUsuario) { this.idUsuario = idUsuario; }
 }

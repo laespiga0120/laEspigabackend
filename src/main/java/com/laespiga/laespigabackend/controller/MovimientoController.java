@@ -5,10 +5,13 @@ import com.laespiga.laespigabackend.service.MovimientoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication; // 🔹 Import necesario
+import jakarta.validation.Valid;
 
 import java.util.List;
+import java.time.LocalDate;
 import java.util.Map;
 
 @RestController
@@ -101,5 +104,52 @@ public class MovimientoController {
     @GetMapping("/entradas/historial")
     public ResponseEntity<List<MovimientoHistorialDto>> obtenerHistorialDeEntradas() {
         return ResponseEntity.ok(movimientoService.obtenerHistorialDeEntradas());
+    }
+
+    /**
+     * Obtiene lista de movimientos con filtros unificados.
+     * URL: GET /api/v1/movimientos?fechaInicio=...&fechaFin=...&tipo=...
+     */
+    @GetMapping
+    public ResponseEntity<List<MovimientoHistorialDto>> listarMovimientos(
+            @RequestParam(required = false) LocalDate fechaInicio,
+            @RequestParam(required = false) LocalDate fechaFin,
+            @RequestParam(required = false) String tipo
+    ) {
+        return ResponseEntity.ok(movimientoService.listarMovimientos(fechaInicio, fechaFin, tipo));
+    }
+
+    /**
+     * Actualiza un movimiento existente.
+     * Requiere rol ADMIN.
+     */
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<?> actualizarMovimiento(@PathVariable Integer id, @Valid @RequestBody MovimientoUpdateDto dto) {
+        try {
+            movimientoService.actualizarMovimiento(id, dto);
+            return ResponseEntity.ok(Map.of("message", "Movimiento actualizado correctamente"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Elimina un movimiento.
+     * Requiere rol ADMIN.
+     */
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMINISTRADOR')")
+    public ResponseEntity<?> eliminarMovimiento(@PathVariable Integer id) {
+        try {
+            movimientoService.eliminarMovimiento(id);
+            return ResponseEntity.ok(Map.of("message", "Movimiento eliminado correctamente"));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
+        }
     }
 }

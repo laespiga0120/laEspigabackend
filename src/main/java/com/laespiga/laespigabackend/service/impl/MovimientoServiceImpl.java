@@ -18,6 +18,13 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.laespiga.laespigabackend.dto.*;
+import com.laespiga.laespigabackend.entity.*;
+import com.laespiga.laespigabackend.repository.*;
+
+import java.time.LocalDate;
+import java.time.LocalTime;
+
 @Service
 public class MovimientoServiceImpl implements MovimientoService {
 
@@ -26,7 +33,7 @@ public class MovimientoServiceImpl implements MovimientoService {
     @Autowired private MovimientoInventarioRepository movimientoRepository;
     @Autowired private UsuarioRepository usuarioRepository;
     @Autowired private ProveedorRepository proveedorRepository;
-
+    @Autowired private DetalleMovimientoRepository detalleMovimientoRepository; // Inyectar repo de detalles
     // -------------------------------------------------------------------------
     // --- MÉTODOS DE BÚSQUEDA Y MOVIMIENTOS (Entradas y Salidas) ---
     // -------------------------------------------------------------------------
@@ -280,29 +287,187 @@ public class MovimientoServiceImpl implements MovimientoService {
                 .collect(Collectors.toList());
     }
 
+
     // -------------------------------------------------------------------------
-    // --- METODO AUXILIAR PARA DTO DE HISTORIAL (MODIFICADO) ---
+    // --- NUEVOS MÉTODOS PARA GESTIÓN COMPLETA DE MOVIMIENTOS ---
     // -------------------------------------------------------------------------
+
+    @Override
+    public List<MovimientoHistorialDto> listarMovimientos(LocalDate fechaInicio, LocalDate fechaFin, String tipo) {
+        LocalDateTime inicio = (fechaInicio != null) ? fechaInicio.atStartOfDay() : null;
+        LocalDateTime fin = (fechaFin != null) ? fechaFin.atTime(LocalTime.MAX) : null;
+
+        // Mapear "Todos" del frontend a null/vacio para la query
+        String tipoFiltro = (tipo != null && !tipo.equalsIgnoreCase("todos")) ? tipo : null;
+
+        List<MovimientoInventario> movimientos = movimientoRepository.buscarPorFiltros(inicio, fin, tipoFiltro);
+
+        return movimientos.stream()
+                .map(this::convertirAMovimientoHistorialDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional
+    public void eliminarMovimiento(Integer idMovimiento) {
+        MovimientoInventario movimiento = movimientoRepository.findById(idMovimiento)
+                .orElseThrow(() -> new ResourceNotFoundException("Movimiento no encontrado"));
+
+        // Revertir impacto en lotes
+        revertirImpactoLotes(movimiento);
+        // 2. Eliminar movimiento (Cascade borrará detalles)
+        movimientoRepository.delete(movimiento);
+    }
+
+    @Override
+    @Transactional
+    public void actualizarMovimiento(Integer idMovimiento, MovimientoUpdateDto dto) {
+        MovimientoInventario movimiento = movimientoRepository.findById(idMovimiento)
+                .orElseThrow(() -> new ResourceNotFoundException("Movimiento no encontrado"));
+
+        // 1. Revertir impacto anterior (Devolver stock a lotes o restar de lotes)
+        revertirImpactoLotes(movimiento);
+
+        // 2. Limpiar detalles anteriores
+        movimiento.getDetalles().clear();
+
+        // 3. Actualizar cabecera
+        movimiento.setTipoMovimiento(dto.getTipoMovimiento());
+        movimiento.setFechaMovimiento(LocalDateTime.of(dto.getFecha(), dto.getHora()));
+        Usuario nuevoResponsable = usuarioRepository.findById(dto.getIdResponsable())
+                .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
+        movimiento.setUsuario(nuevoResponsable);
+
+        // 4. Aplicar nuevos cambios con lógica de lotes
+        List<DetalleMovimiento> nuevosDetalles = new ArrayList<>();
+
+        for (DetalleMovimientoUpdateDto detDto : dto.getDetalles()) {
+            Producto producto = productoRepository.findById(detDto.getIdProducto())
+                    .orElseThrow(() -> new ResourceNotFoundException("Producto no encontrado"));
+
+            if ("ENTRADA".equalsIgnoreCase(dto.getTipoMovimiento())) {
+                // Si es entrada (o corrección de entrada), sumamos al lote más próximo
+                aumentarStockPorLotes(producto, detDto.getCantidad());
+            } else {
+                // Si es salida, restamos del lote más próximo (FEFO)
+                disminuirStockPorLotes(producto, detDto.getCantidad());
+            }
+
+            DetalleMovimiento nuevoDetalle = new DetalleMovimiento();
+            nuevoDetalle.setMovimientoInventario(movimiento);
+            nuevoDetalle.setProducto(producto);
+            nuevoDetalle.setCantidad(detDto.getCantidad());
+            nuevoDetalle.setPrecioVenta(producto.getPrecioVenta());
+            nuevoDetalle.setPrecioCompra(producto.getPrecioCompra());
+
+            nuevosDetalles.add(nuevoDetalle);
+        }
+
+        movimiento.getDetalles().addAll(nuevosDetalles);
+        movimientoRepository.save(movimiento);
+    }
+
+    /**
+     * Método auxiliar para deshacer el efecto de un movimiento en el stock.
+     */
+    private void revertirStock(MovimientoInventario movimiento) {
+        for (DetalleMovimiento detalle : movimiento.getDetalles()) {
+            Producto producto = detalle.getProducto();
+            int cantidad = detalle.getCantidad();
+
+            if ("ENTRADA".equalsIgnoreCase(movimiento.getTipoMovimiento())) {
+                // Si era entrada, al revertir restamos el stock
+                if (producto.getStock() < cantidad) {
+                    throw new IllegalStateException("No se puede revertir la entrada de " +
+                            producto.getNombreProducto() + ". El stock actual es menor a la cantidad original.");
+                }
+                producto.setStock(producto.getStock() - cantidad);
+            } else {
+                // Si era salida, al revertir devolvemos el stock
+                producto.setStock(producto.getStock() + cantidad);
+            }
+            productoRepository.save(producto);
+        }
+    }
+
+    // --- MÉTODOS DE LÓGICA DE LOTES ---
+
+    private void revertirImpactoLotes(MovimientoInventario movimiento) {
+        for (DetalleMovimiento detalle : movimiento.getDetalles()) {
+            if ("ENTRADA".equalsIgnoreCase(movimiento.getTipoMovimiento())) {
+                // Era Entrada: Ahora RESTAMOS (como si fuera una salida para anularla)
+                disminuirStockPorLotes(detalle.getProducto(), detalle.getCantidad());
+            } else {
+                // Era Salida: Ahora SUMAMOS (devolvemos al inventario)
+                aumentarStockPorLotes(detalle.getProducto(), detalle.getCantidad());
+            }
+        }
+    }
+
+    private void aumentarStockPorLotes(Producto producto, int cantidad) {
+        // Buscar lote más próximo a vencer (o cualquiera si no es perecible)
+        // Usamos findLotesDisponiblesParaSalida porque ordena por fechaVencimiento ASC
+        List<Lote> lotes = loteRepository.findLotesDisponiblesParaSalida(producto.getIdProducto());
+
+        if (lotes.isEmpty()) {
+            // Caso raro en edición: No hay lotes. Creamos uno genérico de recuperación.
+            Lote lote = new Lote();
+            lote.setProducto(producto);
+            lote.setCantidad(cantidad);
+            // Fecha vencimiento null si no es perecible, o lógica por defecto
+            loteRepository.save(lote);
+        } else {
+            // Sumar al primero (el más próximo a vencer)
+            Lote lotePrioritario = lotes.get(0);
+            lotePrioritario.setCantidad(lotePrioritario.getCantidad() + cantidad);
+            loteRepository.save(lotePrioritario);
+        }
+
+        // Actualizar referencia global
+        producto.setStock(producto.getStock() + cantidad);
+        productoRepository.save(producto);
+    }
+
+    private void disminuirStockPorLotes(Producto producto, int cantidadRequerida) {
+        List<Lote> lotes = loteRepository.findLotesDisponiblesParaSalida(producto.getIdProducto());
+        int pendiente = cantidadRequerida;
+
+        for (Lote lote : lotes) {
+            if (pendiente <= 0) break;
+
+            int disponible = lote.getCantidad();
+            if (disponible >= pendiente) {
+                lote.setCantidad(disponible - pendiente);
+                pendiente = 0;
+            } else {
+                lote.setCantidad(0);
+                pendiente -= disponible;
+            }
+            loteRepository.save(lote);
+        }
+
+        if (pendiente > 0) {
+            throw new IllegalStateException("Stock insuficiente en lotes para producto: " + producto.getNombreProducto());
+        }
+
+        // Actualizar referencia global
+        producto.setStock(producto.getStock() - cantidadRequerida);
+        productoRepository.save(producto);
+    }
 
     private MovimientoHistorialDto convertirAMovimientoHistorialDto(MovimientoInventario mov) {
         MovimientoHistorialDto dto = new MovimientoHistorialDto();
         dto.setIdMovimiento(mov.getIdMovimiento());
-
-        if ("ENTRADA".equalsIgnoreCase(mov.getTipoMovimiento()) && mov.getProveedor() != null) {
-            dto.setMotivo("Proveedor: " + mov.getProveedor().getNombreProveedor());
-        } else {
-            dto.setMotivo(mov.getMotivo());
-        }
-
+        dto.setMotivo(mov.getMotivo() != null ? mov.getMotivo() : mov.getTipoMovimiento());
         dto.setFechaMovimiento(mov.getFechaMovimiento());
 
         Usuario usuario = mov.getUsuario();
-        dto.setNombreUsuario(usuario.getNombre() + " " + usuario.getApellido());
+        dto.setNombreUsuario(usuario != null ? usuario.getNombre() + " " + usuario.getApellido() : "Desconocido");
+        dto.setIdUsuario(usuario != null ? usuario.getIdUsuario() : null); // Asegúrate de agregar este campo al DTO si no existe
 
-        // --- INICIO DE MODIFICACIÓN ---
-        // Ahora pasamos el precio unitario al DTO de detalle
         List<DetalleHistorialDto> detalles = mov.getDetalles().stream()
                 .map(d -> new DetalleHistorialDto(
+                        d.getProducto().getIdProducto(),
                         d.getProducto().getNombreProducto(),
                         d.getCantidad(),
                         d.getPrecioVenta(),
@@ -311,12 +476,17 @@ public class MovimientoServiceImpl implements MovimientoService {
                 .collect(Collectors.toList());
         dto.setDetalles(detalles);
 
-        // Calculamos y asignamos el total general
+        // Calcular total dependiendo si es entrada (costo) o salida (venta)
         Double totalGeneral = detalles.stream()
-                .mapToDouble(DetalleHistorialDto::getSubtotal)
+                .mapToDouble(d -> {
+                    double precio = "ENTRADA".equalsIgnoreCase(mov.getTipoMovimiento()) ? d.getPrecioCompra() : d.getPrecioVenta();
+                    return d.getCantidad() * precio;
+                })
                 .sum();
         dto.setTotalGeneral(totalGeneral);
-        // --- FIN DE MODIFICACIÓN ---
+
+        // Campo extra para el frontend saber el tipo real
+        dto.setTipoMovimiento(mov.getTipoMovimiento());
 
         return dto;
     }
