@@ -31,4 +31,8 @@ public interface MovimientoService {
     List<MovimientoHistorialDto> listarMovimientos(LocalDate fechaInicio, LocalDate fechaFin, String tipo);
     void eliminarMovimiento(Integer idMovimiento);
     void actualizarMovimiento(Integer idMovimiento, MovimientoUpdateDto updateDto);
+    // --- NUEVO: AJUSTE DE INVENTARIO ---
+    void registrarAjusteInventario(AjusteInventarioDto ajusteDto, String username);
+    List<MovimientoHistorialDto> obtenerHistorialDeAjustes();
+
 }

@@ -152,4 +152,25 @@ public class MovimientoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("error", e.getMessage()));
         }
     }
+
+    // -------------------------------------------------------------------------
+    // --- NUEVOS ENDPOINTS PARA AJUSTE DE INVENTARIO ---
+    // -------------------------------------------------------------------------
+
+    @PostMapping("/ajustes")
+    @PreAuthorize("hasRole('ADMINISTRADOR')") // Generalmente restringido a admins
+    public ResponseEntity<?> registrarAjuste(@Valid @RequestBody AjusteInventarioDto ajusteDto, Authentication authentication) {
+        try {
+            String username = authentication.getName();
+            movimientoService.registrarAjusteInventario(ajusteDto, username);
+            return ResponseEntity.ok(Map.of("message", "Ajuste de inventario realizado correctamente"));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/ajustes/historial")
+    public ResponseEntity<List<MovimientoHistorialDto>> obtenerHistorialAjustes() {
+        return ResponseEntity.ok(movimientoService.obtenerHistorialDeAjustes());
+    }
 }
