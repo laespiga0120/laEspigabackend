@@ -37,6 +37,13 @@ public class DetalleMovimiento {
     @Column(name = "observacion_detalle")
     private String observacionDetalle;
 
+    // --- NUEVAS COLUMNAS PARA AJUSTES DE INVENTARIO ---
+    @Column(name = "stock_anterior")
+    private Integer stockAnterior;
+
+    @Column(name = "stock_nuevo")
+    private Integer stockNuevo;
+
     @Column(name = "id_lote")
     private Integer idLote;
 
@@ -67,4 +74,10 @@ public class DetalleMovimiento {
     public void setObservacionDetalle(String observacionDetalle) { this.observacionDetalle = observacionDetalle; }
     public Integer getIdLote() { return idLote; }
     public void setIdLote(Integer idLote) { this.idLote = idLote; }
+    // --- NUEVOS GETTERS Y SETTERS ---
+    public Integer getStockAnterior() { return stockAnterior; }
+    public void setStockAnterior(Integer stockAnterior) { this.stockAnterior = stockAnterior; }
+
+    public Integer getStockNuevo() { return stockNuevo; }
+    public void setStockNuevo(Integer stockNuevo) { this.stockNuevo = stockNuevo; }
 }

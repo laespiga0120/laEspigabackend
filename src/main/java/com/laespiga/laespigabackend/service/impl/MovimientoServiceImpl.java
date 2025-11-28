@@ -472,6 +472,8 @@ public class MovimientoServiceImpl implements MovimientoService {
         detalle.setObservacionDetalle("Stock Anterior: " + stockSistema + " -> Nuevo: " + stockReal + " (Dif: " + diferencia + ")");
         detalle.setPrecioVenta(producto.getPrecioVenta());
         detalle.setPrecioCompra(producto.getPrecioCompra());
+        detalle.setStockAnterior(stockSistema);
+        detalle.setStockNuevo(stockReal);
 
         detalleMovimientoRepository.save(detalle);
 
@@ -561,10 +563,11 @@ public class MovimientoServiceImpl implements MovimientoService {
         dto.setIdMovimiento(mov.getIdMovimiento());
         dto.setMotivo(mov.getMotivo() != null ? mov.getMotivo() : mov.getTipoMovimiento());
         dto.setFechaMovimiento(mov.getFechaMovimiento());
+        dto.setTipoMovimiento(mov.getTipoMovimiento()); // Asegura que se setea el tipo
 
         Usuario usuario = mov.getUsuario();
         dto.setNombreUsuario(usuario != null ? usuario.getNombre() + " " + usuario.getApellido() : "Desconocido");
-        dto.setIdUsuario(usuario != null ? usuario.getIdUsuario() : null); // Asegúrate de agregar este campo al DTO si no existe
+        dto.setIdUsuario(usuario != null ? usuario.getIdUsuario() : null);
 
         List<DetalleHistorialDto> detalles = mov.getDetalles().stream()
                 .map(d -> new DetalleHistorialDto(
@@ -572,12 +575,13 @@ public class MovimientoServiceImpl implements MovimientoService {
                         d.getProducto().getNombreProducto(),
                         d.getCantidad(),
                         d.getPrecioVenta(),
-                        d.getPrecioCompra()
+                        d.getPrecioCompra(),
+                        d.getStockAnterior(), // <--- ¡AQUÍ ESTÁ LA CLAVE! Pasamos los datos
+                        d.getStockNuevo()     // <--- ¡AQUÍ ESTÁ LA CLAVE! Pasamos los datos
                 ))
                 .collect(Collectors.toList());
         dto.setDetalles(detalles);
 
-        // Calcular total dependiendo si es entrada (costo) o salida (venta)
         Double totalGeneral = detalles.stream()
                 .mapToDouble(d -> {
                     double precio = "ENTRADA".equalsIgnoreCase(mov.getTipoMovimiento()) ? d.getPrecioCompra() : d.getPrecioVenta();
@@ -585,9 +589,6 @@ public class MovimientoServiceImpl implements MovimientoService {
                 })
                 .sum();
         dto.setTotalGeneral(totalGeneral);
-
-        // Campo extra para el frontend saber el tipo real
-        dto.setTipoMovimiento(mov.getTipoMovimiento());
 
         return dto;
     }
