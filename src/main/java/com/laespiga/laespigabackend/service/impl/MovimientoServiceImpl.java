@@ -58,6 +58,7 @@ public class MovimientoServiceImpl implements MovimientoService {
 
                     // 3. Devolver el DTO con el stock real
                     return new ProductoBusquedaDto(
+                            p.getPerecible(),
                             p.getIdProducto(),
                             p.getNombreProducto(),
                             p.getDescripcionProducto(),
