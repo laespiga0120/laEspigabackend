@@ -53,11 +53,14 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/proveedores/**").permitAll()
                         .requestMatchers("/api/v1/ubicaciones/**").permitAll()
                         .requestMatchers("/api/v1/movimientos/**").permitAll()
+                        .requestMatchers("/api/v1/devoluciones/pendientes").permitAll()
+                        .requestMatchers("/api/v1/devoluciones").permitAll()
+
 
                         // 🔸 Usuarios y Roles (Protegidos, la lógica de rol está en el controlador)
                         .requestMatchers("/api/v1/usuarios/**").authenticated()
                         .requestMatchers("/api/v1/roles/**").authenticated()
-
+                        .requestMatchers("/api/v1/devoluciones/**").authenticated()
                         // 🔸 Productos
                         .requestMatchers(HttpMethod.POST, "/api/productos/registrar").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/productos/inventario").permitAll()

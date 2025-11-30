@@ -244,6 +244,7 @@ public class ProductoServiceImpl implements ProductoService {
         // 5. Mapear lotes a DTO
         List<LoteDetalleDto> lotesDto = lotes.stream()
                 .map(lote -> new LoteDetalleDto(
+                        lote.getIdLote(),
                         lote.getCodigoLote(),
                         lote.getCantidad(),
                         lote.getFechaVencimiento() != null ? lote.getFechaVencimiento().format(DATE_FORMATTER) : null
