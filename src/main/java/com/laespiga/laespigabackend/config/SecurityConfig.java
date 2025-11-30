@@ -45,10 +45,10 @@ public class SecurityConfig {
                         // 🔸 OPTIONS PRIMERO
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // 🔸 Autenticación
-                        .requestMatchers("/auth/**").permitAll()
+                        // 🔸 Autenticación y Recuperación
+                        .requestMatchers("/auth/**").permitAll() // Incluye /auth/recovery/**
 
-                        // 🔸 Endpoints públicos de API (Categorias, Proveedores, etc.)
+                        // 🔸 Endpoints públicos de API
                         .requestMatchers("/api/v1/categorias/**").permitAll()
                         .requestMatchers("/api/v1/proveedores/**").permitAll()
                         .requestMatchers("/api/v1/ubicaciones/**").permitAll()
@@ -56,8 +56,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/devoluciones/pendientes").permitAll()
                         .requestMatchers("/api/v1/devoluciones").permitAll()
 
-
-                        // 🔸 Usuarios y Roles (Protegidos, la lógica de rol está en el controlador)
+                        // 🔸 Usuarios y Roles
                         .requestMatchers("/api/v1/usuarios/**").authenticated()
                         .requestMatchers("/api/v1/roles/**").authenticated()
                         .requestMatchers("/api/v1/devoluciones/**").authenticated()
@@ -84,7 +83,7 @@ public class SecurityConfig {
         cors.setAllowedOriginPatterns(Arrays.asList(
                 "http://localhost:*",
                 "http://127.0.0.1:*",
-                "https://la-espigafrontend.vercel.app"    
+                "https://la-espigafrontend.vercel.app"
         ));
         cors.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         cors.setAllowedHeaders(Arrays.asList("*"));
