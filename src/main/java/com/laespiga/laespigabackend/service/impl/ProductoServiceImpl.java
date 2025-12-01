@@ -217,6 +217,55 @@ public class ProductoServiceImpl implements ProductoService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<ProductoInventarioDto> obtenerAlertasStock() {
+        // Usamos la especificación existente para filtrar stock bajo
+        Specification<Producto> spec = ProductoSpecification.isStockBajoMinimo();
+
+        // Ordenamos por stock ascendente (los más críticos primero)
+        List<Producto> productos = productoRepository.findAll(spec, Sort.by("stock"));
+
+        return productos.stream().map(this::mapToInventarioDto).collect(Collectors.toList());
+    }
+
+    // Método auxiliar para mapear entidad a DTO y evitar duplicidad de código
+    private ProductoInventarioDto mapToInventarioDto(Producto p) {
+        // Calcular stock real desde los lotes
+        int stockDisp = loteRepository.findLotesDisponiblesParaSalida(p.getIdProducto())
+                .stream()
+                .mapToInt(Lote::getCantidad)
+                .sum();
+
+        // Formatear ubicación (con chequeos null)
+        String ubicacionStr = "N/A";
+        if (p.getUbicacion() != null && p.getUbicacion().getRepisa() != null) {
+            ubicacionStr = String.format("%s-%d-%d",
+                    p.getUbicacion().getRepisa().getCodigo(),
+                    p.getUbicacion().getFila(),
+                    p.getUbicacion().getColumna());
+        }
+
+        // Obtener nombre de categoría (con chequeo null)
+        String categoriaNombre = (p.getCategoria() != null) ? p.getCategoria().getNombreCategoria() : "N/A";
+
+        // Obtener nombre de proveedor (con chequeo null)
+        String proveedorNombre = (p.getProveedor() != null) ? p.getProveedor().getNombreProveedor() : "N/A";
+
+        // Crear DTO
+        return new ProductoInventarioDto(
+                p.getIdProducto(),
+                p.getNombreProducto(),
+                categoriaNombre,
+                p.getPrecioCompra(),
+                p.getPrecioVenta(),
+                stockDisp,
+                p.getStockMinimo(),
+                ubicacionStr,
+                proveedorNombre
+        );
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public ProductoDetalleDto getProductoDetalle(Integer id) {
         // 1. Buscar producto
         Producto p = productoRepository.findById(id)
@@ -313,7 +362,11 @@ public class ProductoServiceImpl implements ProductoService {
         Usuario usuario = usuarioRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuario no encontrado"));
 
-        if (!usuario.getIdUsuario().equals(1)) {
+        String nombreRol = (usuario.getRol() != null) ? usuario.getRol().getNombreRol() : "";
+        boolean esAdmin = "ADMINISTRADOR".equalsIgnoreCase(nombreRol) || "Administrador".equalsIgnoreCase(nombreRol);
+        boolean esSuperAdmin = usuario.getIdUsuario().equals(1);
+
+        if (!esAdmin && !esSuperAdmin) {
             throw new AccessDeniedException("Usuario no autorizado para esta operación.");
         }
 

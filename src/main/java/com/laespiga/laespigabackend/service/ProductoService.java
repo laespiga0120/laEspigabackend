@@ -64,4 +64,11 @@ public interface ProductoService {
      * @return El DTO de detalle actualizado.
      */
     ProductoDetalleDto actualizarProductoParcial(Integer idProducto, ProductoUpdateDto dto, String username);
+
+    /**
+     * Obtiene la lista de productos cuyo stock es menor o igual al mínimo.
+     * @return Lista de alertas.
+     */
+    List<ProductoInventarioDto> obtenerAlertasStock();
+
 }

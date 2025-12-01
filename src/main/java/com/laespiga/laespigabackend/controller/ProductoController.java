@@ -123,6 +123,16 @@ public class ProductoController {
     }
 
     /**
+     * Endpoint para obtener alertas de stock bajo.
+     * GET /api/productos/alertas
+     */
+    @GetMapping("/alertas")
+    public ResponseEntity<List<ProductoInventarioDto>> getAlertasStock() {
+        List<ProductoInventarioDto> alertas = productoService.obtenerAlertasStock();
+        return ResponseEntity.ok(alertas);
+    }
+
+    /**
      * Endpoint para obtener los datos para poblar los filtros (categorías y repisas).
      * GET /api/v1/productos/filtros
      */
