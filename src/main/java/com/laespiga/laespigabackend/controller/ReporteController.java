@@ -1,17 +1,23 @@
 package com.laespiga.laespigabackend.controller;
 
 import com.laespiga.laespigabackend.dto.ReporteDto;
+import com.laespiga.laespigabackend.dto.ReportesAnaliticosDto;
+import com.laespiga.laespigabackend.repository.DetalleMovimientoRepository;
 import com.laespiga.laespigabackend.service.MovimientoService;
-import com.laespiga.laespigabackend.service.ReporteExportService; // ¡Nueva Importación!
+import com.laespiga.laespigabackend.service.ReporteExportService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ContentDisposition; // Necesario para la descarga
-import org.springframework.http.HttpHeaders;       // Necesario para la descarga
-import org.springframework.http.HttpStatus;        // Necesario para la descarga
-import org.springframework.http.MediaType;         // Necesario para tipos de archivo
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.ByteArrayOutputStream;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 
@@ -26,6 +32,9 @@ public class ReporteController {
 
     @Autowired // Inyección del nuevo servicio
     private ReporteExportService reporteExportService;
+
+    @Autowired
+    private DetalleMovimientoRepository detalleRepository; // Inyectamos repositorio directamente para reportes de lectura
 
     /**
      * Endpoint 1: Genera el reporte de stock actual en formato JSON (para la tabla).
@@ -120,5 +129,51 @@ public class ReporteController {
         } catch (Exception e) {
             return ResponseEntity.internalServerError().body(Map.of("error", "Error al exportar el reporte: " + e.getMessage()));
         }
+    }
+
+    // --- NUEVOS ENDPOINTS ANALÍTICOS ---
+
+    @GetMapping("/mas-vendidos")
+    public ResponseEntity<?> reporteMasVendidos(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+
+        LocalDateTime inicio = desde.atStartOfDay();
+        LocalDateTime fin = hasta.atTime(LocalTime.MAX);
+
+        List<ReportesAnaliticosDto.ProductoMasVendidoProjection> data =
+                detalleRepository.findProductosMasVendidos(inicio, fin);
+
+        return ResponseEntity.ok(data);
+    }
+
+    @GetMapping("/baja-rotacion")
+    public ResponseEntity<?> reporteBajaRotacion(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta,
+            @RequestParam Long umbral) {
+
+        LocalDateTime inicio = desde.atStartOfDay();
+        LocalDateTime fin = hasta.atTime(LocalTime.MAX);
+
+        List<ReportesAnaliticosDto.ProductoBajaRotacionProjection> data =
+                detalleRepository.findProductosBajaRotacion(inicio, fin, umbral);
+
+        return ResponseEntity.ok(data);
+    }
+
+    @GetMapping("/entradas-proveedor")
+    public ResponseEntity<?> reporteEntradasProveedor(
+            @RequestParam Integer idProveedor,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate desde,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate hasta) {
+
+        LocalDateTime inicio = desde.atStartOfDay();
+        LocalDateTime fin = hasta.atTime(LocalTime.MAX);
+
+        List<ReportesAnaliticosDto.EntradaProveedorProjection> data =
+                detalleRepository.findEntradasPorProveedor(idProveedor, inicio, fin);
+
+        return ResponseEntity.ok(data);
     }
 }

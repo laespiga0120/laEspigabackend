@@ -275,13 +275,19 @@ public class MovimientoServiceImpl implements MovimientoService {
                                 ubicacion.getColumna());
                     }
 
+                    // 🔹 CÁLCULO REAL DE STOCK: Suma de lotes disponibles
+                    int stockReal = loteRepository.findLotesDisponiblesParaSalida(p.getIdProducto())
+                            .stream()
+                            .mapToInt(Lote::getCantidad)
+                            .sum();
+
                     return new ReporteDto(
                             p.getIdProducto(),
                             p.getNombreProducto(),
                             nombreCategoria,
                             p.getMarca(),
                             ubicacionStr,
-                            p.getStock(),
+                            stockReal, // <-- USAMOS LA SUMA DE LOTES
                             p.getStockMinimo()
                     );
                 })

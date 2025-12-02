@@ -55,6 +55,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/v1/movimientos/**").permitAll()
                         .requestMatchers("/api/v1/devoluciones/pendientes").permitAll()
                         .requestMatchers("/api/v1/devoluciones").permitAll()
+                        .requestMatchers("/api/v1/reportes/**").permitAll()
 
                         // 🔸 Usuarios y Roles
                         .requestMatchers("/api/v1/usuarios/**").authenticated()
