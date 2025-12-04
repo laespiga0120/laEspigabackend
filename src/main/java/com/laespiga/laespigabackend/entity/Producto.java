@@ -2,7 +2,10 @@ package com.laespiga.laespigabackend.entity;
 
 import jakarta.persistence.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnore; // Importante para evitar recursión infinita
 import java.time.LocalDateTime;
+import java.util.ArrayList; // Import necesario
+import java.util.List;      // Import necesario
 
 @Entity
 @Table(name = "producto")
@@ -61,11 +64,16 @@ public class Producto {
     @JoinColumn(name = "id_ubicacion", unique = true)
     private Ubicacion ubicacion;
 
-    // --- NUEVA RELACIÓN AÑADIDA ---
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_proveedor")
     private Proveedor proveedor;
-    // ----------------------------
+
+    // --- NUEVA RELACIÓN (CORRECCIÓN) ---
+    // Esto permite usar "p.lotes" en las consultas JPQL del repositorio
+    @OneToMany(mappedBy = "producto", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore // Evita que al serializar el producto se traigan todos sus lotes automáticamente en JSON
+    private List<Lote> lotes = new ArrayList<>();
+    // ------------------------------------
 
     public Producto() {
     }
@@ -174,7 +182,6 @@ public class Producto {
         this.ubicacion = ubicacion;
     }
 
-    // --- GETTER Y SETTER PARA PROVEEDOR ---
     public Proveedor getProveedor() {
         return proveedor;
     }
@@ -182,7 +189,6 @@ public class Producto {
     public void setProveedor(Proveedor proveedor) {
         this.proveedor = proveedor;
     }
-    // ------------------------------------
 
     public Double getPrecioVenta() {
         return precioVenta;
@@ -190,5 +196,14 @@ public class Producto {
 
     public void setPrecioVenta(Double precioVenta) {
         this.precioVenta = precioVenta;
+    }
+
+    // --- GETTER Y SETTER PARA LOTES ---
+    public List<Lote> getLotes() {
+        return lotes;
+    }
+
+    public void setLotes(List<Lote> lotes) {
+        this.lotes = lotes;
     }
 }

@@ -218,14 +218,19 @@ public class ProductoServiceImpl implements ProductoService {
     @Override
     @Transactional(readOnly = true)
     public List<ProductoInventarioDto> obtenerAlertasStock() {
-        // Usamos la especificación existente para filtrar stock bajo
-        Specification<Producto> spec = ProductoSpecification.isStockBajoMinimo();
+        // --- LÓGICA MODIFICADA: COMPARAR CONTRA LOTES ---
 
-        // Ordenamos por stock ascendente (los más críticos primero)
-        List<Producto> productos = productoRepository.findAll(spec, Sort.by("stock"));
+        // Usamos la query personalizada del repositorio que hace la suma de lotes
+        // y filtra aquellos donde SUM(lotes) <= stockMinimo
+        List<Producto> productosCriticos = productoRepository.findProductosConStockCriticoCalculado();
 
-        return productos.stream().map(this::mapToInventarioDto).collect(Collectors.toList());
+        // Reutilizamos el mapeo existente que también calcula el stock de lotes
+        // para mostrar el dato correcto en el frontend
+        return productosCriticos.stream()
+                .map(this::mapToInventarioDto)
+                .collect(Collectors.toList());
     }
+
 
     // Método auxiliar para mapear entidad a DTO y evitar duplicidad de código
     private ProductoInventarioDto mapToInventarioDto(Producto p) {
